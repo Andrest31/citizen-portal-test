@@ -1,186 +1,139 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { DataGrid } from "@mui/x-data-grid";
+import {
+  Box,
+  TextField,
+  MenuItem,
+  Typography,
+  Paper,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 function Catalog({ citizens }) {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [regionFilter, setRegionFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortField, setSortField] = useState("");
-  const [sortOrder, setSortOrder] = useState("asc");
-  const itemsPerPage = 10;
 
-  const filteredCitizens = citizens.filter((c) => {
-    const nameMatch = c.fullName
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const regionMatch = !regionFilter || c.region === regionFilter;
-    const genderMatch = !genderFilter || c.gender === genderFilter;
-    return nameMatch && regionMatch && genderMatch;
-  });
-
-  const sortedCitizens = [...filteredCitizens].sort((a, b) => {
-    if (!sortField) return 0;
-    const aValue = a[sortField];
-    const bValue = b[sortField];
-    if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
-    if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
-    return 0;
-  });
-
-  const totalPages = Math.ceil(sortedCitizens.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedCitizens = sortedCitizens.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
-
+  // Уникальные значения для фильтров
   const uniqueRegions = [...new Set(citizens.map((c) => c.region))];
   const uniqueGenders = ["М", "Ж"];
 
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortOrder("asc");
-    }
-    setCurrentPage(1);
-  };
+  // Подготовка данных с фильтрами
+  const filteredCitizens = useMemo(() => {
+    return citizens.filter((c) => {
+      const nameMatch = c.fullName
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const regionMatch = !regionFilter || c.region === regionFilter;
+      const genderMatch = !genderFilter || c.gender === genderFilter;
+      return nameMatch && regionMatch && genderMatch;
+    });
+  }, [citizens, searchTerm, regionFilter, genderFilter]);
+
+  // Определение колонок для таблицы
+  const columns = [
+    {
+      field: "fullName",
+      headerName: "ФИО",
+      flex: 1,
+      sortable: true,
+    },
+    {
+      field: "birthDate",
+      headerName: "Дата рождения",
+      width: 150,
+      sortable: true,
+    },
+    {
+      field: "region",
+      headerName: "Регион",
+      width: 180,
+      sortable: true,
+    },
+    {
+      field: "snils",
+      headerName: "СНИЛС",
+      width: 180,
+    },
+  ];
 
   return (
-    <div>
-      <h1>Картотека</h1>
-      <p>Всего записей: 100000+ (показываем 150 для демо)</p>
-      <div style={{ marginBottom: "10px" }}>
-        <input
-          type="text"
-          placeholder="Поиск по ФИО..."
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h4" gutterBottom>
+        Картотека
+      </Typography>
+      <Typography variant="body2" gutterBottom>
+        Всего записей: {filteredCitizens.length} (демо: 150, реальность: 100k+)
+      </Typography>
+
+      {/* Панель фильтров */}
+      <Paper
+        sx={{
+          display: "flex",
+          gap: 2,
+          flexWrap: "wrap",
+          p: 2,
+          mb: 2,
+        }}
+      >
+        <TextField
+          label="Поиск по ФИО"
+          variant="outlined"
           value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1);
-          }}
-          style={{
-            padding: "10px",
-            marginRight: "10px",
-            width: "300px",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-          }}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          sx={{ flex: "1 1 300px" }}
         />
-        <select
+        <TextField
+          select
+          label="Регион"
           value={regionFilter}
-          onChange={(e) => {
-            setRegionFilter(e.target.value);
-            setCurrentPage(1);
-          }}
-          style={{
-            padding: "10px",
-            marginRight: "10px",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-          }}
+          onChange={(e) => setRegionFilter(e.target.value)}
+          sx={{ width: 200 }}
         >
-          <option value="">Все регионы</option>
+          <MenuItem value="">Все регионы</MenuItem>
           {uniqueRegions.map((r) => (
-            <option key={r} value={r}>
+            <MenuItem key={r} value={r}>
               {r}
-            </option>
+            </MenuItem>
           ))}
-        </select>
-        <select
+        </TextField>
+        <TextField
+          select
+          label="Пол"
           value={genderFilter}
-          onChange={(e) => {
-            setGenderFilter(e.target.value);
-            setCurrentPage(1);
-          }}
-          style={{
-            padding: "10px",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-          }}
+          onChange={(e) => setGenderFilter(e.target.value)}
+          sx={{ width: 150 }}
         >
-          <option value="">Все полы</option>
+          <MenuItem value="">Все</MenuItem>
           {uniqueGenders.map((g) => (
-            <option key={g} value={g}>
+            <MenuItem key={g} value={g}>
               {g}
-            </option>
+            </MenuItem>
           ))}
-        </select>
+        </TextField>
+      </Paper>
+
+      {/* Таблица */}
+      <div style={{ height: 600, width: "100%" }}>
+        <DataGrid
+          rows={filteredCitizens.map((c) => ({
+            id: c.id,
+            fullName: c.fullName,
+            birthDate: c.birthDate,
+            region: c.region,
+            snils: c.snils,
+          }))}
+          columns={columns}
+          pageSize={10}
+          rowsPerPageOptions={[10, 25, 50]}
+          pagination
+          disableSelectionOnClick
+          onRowClick={(params) => navigate(`/catalog/${params.id}`)}
+        />
       </div>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr style={{ background: "#1976d2", color: "white" }}>
-            <th
-              style={{
-                padding: "10px",
-                border: "1px solid #ddd",
-                cursor: "pointer",
-              }}
-              onClick={() => handleSort("fullName")}
-            >
-              ФИО{" "}
-              {sortField === "fullName" && (sortOrder === "asc" ? "↑" : "↓")}
-            </th>
-            <th
-              style={{
-                padding: "10px",
-                border: "1px solid #ddd",
-                cursor: "pointer",
-              }}
-              onClick={() => handleSort("birthDate")}
-            >
-              Дата рождения{" "}
-              {sortField === "birthDate" && (sortOrder === "asc" ? "↑" : "↓")}
-            </th>
-            <th
-              style={{
-                padding: "10px",
-                border: "1px solid #ddd",
-                cursor: "pointer",
-              }}
-              onClick={() => handleSort("region")}
-            >
-              Регион{" "}
-              {sortField === "region" && (sortOrder === "asc" ? "↑" : "↓")}
-            </th>
-            <th style={{ padding: "10px", border: "1px solid #ddd" }}>СНИЛС</th>
-          </tr>
-        </thead>
-        <tbody>
-          {paginatedCitizens.map((c) => (
-            <tr
-              key={c.id}
-              style={{ cursor: "pointer" }}
-              onClick={() => (window.location.href = `/catalog/${c.id}`)}
-            >
-              <td>{c.fullName}</td>
-              <td>{c.birthDate}</td>
-              <td>{c.region}</td>
-              <td>{c.citizenshipStatus || "Не указан"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div style={{ marginTop: "10px" }}>
-        <button
-          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          Предыдущая
-        </button>
-        <span>
-          {" "}
-          Страница {currentPage} из {totalPages}
-        </span>
-        <button
-          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-          disabled={currentPage === totalPages}
-        >
-          Следующая
-        </button>
-      </div>
-    </div>
+    </Box>
   );
 }
+
 export default Catalog;
