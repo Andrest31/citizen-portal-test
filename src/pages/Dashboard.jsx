@@ -45,8 +45,7 @@ function Dashboard({ citizens }) {
 
   return (
     <div>
-      <h1>Dashboard (новая версия)</h1>
-      <p>Старый вариант: <a href="/dashboard-old">DashboardOld</a></p>
+      <h1>Dashboard</h1>
       <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
         <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', flex: '1 1 200px' }}>
           <p>Всего граждан: {total} (симуляция 100k+)</p>
