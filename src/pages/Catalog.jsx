@@ -5,6 +5,8 @@ function Catalog({ citizens }) {
   const [regionFilter, setRegionFilter] = useState('');
   const [genderFilter, setGenderFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc');
   const itemsPerPage = 10;
 
   const filteredCitizens = citizens.filter(c => {
@@ -14,12 +16,31 @@ function Catalog({ citizens }) {
     return nameMatch && regionMatch && genderMatch;
   });
 
-  const totalPages = Math.ceil(filteredCitizens.length / itemsPerPage);
+  const sortedCitizens = [...filteredCitizens].sort((a, b) => {
+    if (!sortField) return 0;
+    const aValue = a[sortField];
+    const bValue = b[sortField];
+    if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const totalPages = Math.ceil(sortedCitizens.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedCitizens = filteredCitizens.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedCitizens = sortedCitizens.slice(startIndex, startIndex + itemsPerPage);
 
   const uniqueRegions = [...new Set(citizens.map(c => c.region))];
   const uniqueGenders = ['М', 'Ж'];
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      } else {
+        setSortField(field);
+        setSortOrder('asc');
+      }
+      setCurrentPage(1);
+    };
 
   return (
     <div>
@@ -53,9 +74,16 @@ function Catalog({ citizens }) {
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ background: '#1976d2', color: 'white' }}>
-            <th style={{ padding: '10px', border: '1px solid #ddd' }}>ФИО</th>
-            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Дата рождения</th>
-            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Регион</th>
+            <th style={{ padding: '10px', border: '1px solid #ddd', cursor: 'pointer' }} onClick={() => handleSort('fullName')}>
+              ФИО {sortField === 'fullName' && (sortOrder === 'asc' ? '↑' : '↓')}
+            </th>
+            <th style={{ padding: '10px', border: '1px solid #ddd', cursor: 'pointer' }} onClick={() => handleSort('birthDate')}>
+              Дата рождения {sortField === 'birthDate' && (sortOrder === 'asc' ? '↑' : '↓')}
+            </th>
+            <th style={{ padding: '10px', border: '1px solid #ddd', cursor: 'pointer' }} onClick={() => handleSort('region')}>
+              Регион {sortField === 'region' && (sortOrder === 'asc' ? '↑' : '↓')}
+            </th>
+            <th style={{ padding: '10px', border: '1px solid #ddd' }}>СНИЛС</th>
           </tr>
         </thead>
         <tbody>
@@ -64,6 +92,7 @@ function Catalog({ citizens }) {
               <td style={{ padding: '10px', border: '1px solid #ddd' }}>{c.fullName}</td>
               <td style={{ padding: '10px', border: '1px solid #ddd' }}>{c.birthDate}</td>
               <td style={{ padding: '10px', border: '1px solid #ddd' }}>{c.region}</td>
+              <td style={{ padding: '10px', border: '1px solid #ddd' }}>{c.snils}</td>
             </tr>
           ))}
         </tbody>
