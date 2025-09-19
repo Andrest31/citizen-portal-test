@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { DataGrid } from "@mui/x-data-grid";
 import {
   Box,
   TextField,
@@ -7,6 +6,7 @@ import {
   Typography,
   Paper,
 } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
 
 function Catalog({ citizens }) {
@@ -14,12 +14,16 @@ function Catalog({ citizens }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [regionFilter, setRegionFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
+  const [pageSize, setPageSize] = useState(50);
 
   // Уникальные значения для фильтров
-  const uniqueRegions = [...new Set(citizens.map((c) => c.region))];
+  const uniqueRegions = useMemo(
+    () => [...new Set(citizens.map((c) => c.region))],
+    [citizens]
+  );
   const uniqueGenders = ["М", "Ж"];
 
-  // Подготовка данных с фильтрами
+  // Отфильтрованные данные
   const filteredCitizens = useMemo(() => {
     return citizens.filter((c) => {
       const nameMatch = c.fullName
@@ -31,31 +35,12 @@ function Catalog({ citizens }) {
     });
   }, [citizens, searchTerm, regionFilter, genderFilter]);
 
-  // Определение колонок для таблицы
+  // Колонки
   const columns = [
-    {
-      field: "fullName",
-      headerName: "ФИО",
-      flex: 1,
-      sortable: true,
-    },
-    {
-      field: "birthDate",
-      headerName: "Дата рождения",
-      width: 150,
-      sortable: true,
-    },
-    {
-      field: "region",
-      headerName: "Регион",
-      width: 180,
-      sortable: true,
-    },
-    {
-      field: "snils",
-      headerName: "СНИЛС",
-      width: 180,
-    },
+    { field: "fullName", headerName: "ФИО", flex: 1, sortable: true },
+    { field: "birthDate", headerName: "Дата рождения", width: 150, sortable: true },
+    { field: "region", headerName: "Регион", width: 180, sortable: true },
+    { field: "snils", headerName: "СНИЛС", width: 180 },
   ];
 
   return (
@@ -64,7 +49,7 @@ function Catalog({ citizens }) {
         Картотека
       </Typography>
       <Typography variant="body2" gutterBottom>
-        Всего записей: {filteredCitizens.length} (демо: 150, реальность: 100k+)
+        Всего записей: {filteredCitizens.length} (демо: {citizens.length}, реальность: 100k+)
       </Typography>
 
       {/* Панель фильтров */}
@@ -115,7 +100,7 @@ function Catalog({ citizens }) {
       </Paper>
 
       {/* Таблица */}
-      <div style={{ height: 600, width: "100%" }}>
+      <div style={{ height: 700, width: "100%" }}>
         <DataGrid
           rows={filteredCitizens.map((c) => ({
             id: c.id,
@@ -125,11 +110,15 @@ function Catalog({ citizens }) {
             snils: c.snils,
           }))}
           columns={columns}
-          pageSize={10}
-          rowsPerPageOptions={[10, 25, 50]}
+          pageSize={pageSize}
+          onPageSizeChange={(newSize) => setPageSize(newSize)}
+          rowsPerPageOptions={[25, 50, 100]}
           pagination
+          paginationMode="client"
           disableSelectionOnClick
           onRowClick={(params) => navigate(`/catalog/${params.id}`)}
+          experimentalFeatures={{ newEditingApi: true }}
+          rowBuffer={5} // сколько строк загружается за экран (ускоряет скролл)
         />
       </div>
     </Box>

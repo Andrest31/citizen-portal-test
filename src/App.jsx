@@ -3,86 +3,97 @@ import { mockCitizens } from "./data/citizens";
 import Dashboard from "./pages/Dashboard";
 import Catalog from "./pages/Catalog";
 import CitizenCard from "./pages/CitizenCard";
-
+import { ThemeProvider } from "@mui/material/styles";
+import theme from "./theme";
 import {
+  Box,
+  CssBaseline,
   AppBar,
   Toolbar,
   Typography,
-  CssBaseline,
   Drawer,
   List,
   ListItem,
   ListItemText,
-  Box,
+  IconButton,
 } from "@mui/material";
+import Brightness4Icon from "@mui/icons-material/Brightness4";
+import Brightness7Icon from "@mui/icons-material/Brightness7";
+import { useState } from "react";
 
-const drawerWidth = 240;
+const drawerWidth = 260;
 
 function App() {
+  const [mode, setMode] = useState("light");
+
   return (
-    <Router>
-      <Box sx={{ display: "flex" }}>
-        <CssBaseline />
-        {/* Верхняя панель */}
-        <AppBar
-          position="fixed"
-          sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
-        >
-          <Toolbar>
-            <Typography variant="h6" noWrap component="div">
-              Портал учета граждан
-            </Typography>
-          </Toolbar>
-        </AppBar>
+    <ThemeProvider theme={theme(mode)}>
+      <Router>
+        <Box sx={{ display: "flex" }}>
+          <CssBaseline />
+          <AppBar position="fixed" sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}>
+            <Toolbar>
+              <Typography variant="h6" noWrap component="div">
+                Портал учета граждан
+              </Typography>
+              <IconButton
+                color="inherit"
+                sx={{ ml: "auto" }}
+                onClick={() => setMode((m) => (m === "light" ? "dark" : "light"))}
+              >
+                {mode === "light" ? <Brightness4Icon /> : <Brightness7Icon />}
+              </IconButton>
+            </Toolbar>
+          </AppBar>
 
-        {/* Боковое меню */}
-        <Drawer
-          variant="permanent"
-          sx={{
-            width: drawerWidth,
-            flexShrink: 0,
-            [`& .MuiDrawer-paper`]: {
+          <Drawer
+            variant="permanent"
+            sx={{
               width: drawerWidth,
-              boxSizing: "border-box",
-            },
-          }}
-        >
-          <Toolbar />
-          <Box sx={{ overflow: "auto" }}>
-            <List>
-              <ListItem button component={Link} to="/dashboard">
-                <ListItemText primary="Dashboard" />
-              </ListItem>
-              <ListItem button component={Link} to="/catalog">
-                <ListItemText primary="Картотека" />
-              </ListItem>
-            </List>
-          </Box>
-        </Drawer>
+              flexShrink: 0,
+              "& .MuiDrawer-paper": {
+                width: drawerWidth,
+                boxSizing: "border-box",
+                borderRight: "1px solid rgba(0,0,0,0.06)",
+              },
+            }}
+          >
+            <Toolbar />
+            <Box sx={{ overflow: "auto", p: 2 }}>
+              <List>
+                <ListItem button component={Link} to="/dashboard">
+                  <ListItemText primary="Dashboard" />
+                </ListItem>
+                <ListItem button component={Link} to="/catalog">
+                  <ListItemText primary="Картотека" />
+                </ListItem>
+              </List>
+            </Box>
+          </Drawer>
 
-        {/* Контент */}
-        <Box
-          component="main"
-          sx={{ flexGrow: 1, bgcolor: "background.default", p: 3 }}
-        >
-          <Toolbar />
-          <Routes>
-            <Route
-              path="/dashboard"
-              element={<Dashboard citizens={mockCitizens} />}
-            />
-            <Route
-              path="/catalog"
-              element={<Catalog citizens={mockCitizens} />}
-            />
-            <Route
-              path="/catalog/:id"
-              element={<CitizenCard citizens={mockCitizens} />}
-            />
-          </Routes>
+          <Box
+            component="main"
+            sx={{ flexGrow: 1, bgcolor: "background.default", p: 3 }}
+          >
+            <Toolbar />
+            <Routes>
+              <Route
+                path="/dashboard"
+                element={<Dashboard citizens={mockCitizens} />}
+              />
+              <Route
+                path="/catalog"
+                element={<Catalog citizens={mockCitizens} />}
+              />
+              <Route
+                path="/catalog/:id"
+                element={<CitizenCard citizens={mockCitizens} />}
+              />
+            </Routes>
+          </Box>
         </Box>
-      </Box>
-    </Router>
+      </Router>
+    </ThemeProvider>
   );
 }
 

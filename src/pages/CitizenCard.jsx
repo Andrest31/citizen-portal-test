@@ -1,229 +1,102 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   Box,
+  Avatar,
+  Typography,
+  Button,
   Tabs,
   Tab,
-  Typography,
-  TextField,
   Card,
   CardContent,
-  Button,
-  Avatar,
-  Checkbox,
-  FormControlLabel,
-  MenuItem,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import SaveIcon from "@mui/icons-material/Save";
+import { useCitizen } from "../hooks/useCitizen";
+import { motion } from "framer-motion";
+import MainTab from "../components/citizen-tabs/MainTab";
+import FamilyTab from "../components/citizen-tabs/FamilyTab";
+import EducationTab from "../components/citizen-tabs/EducationTab";
+import WorkTab from "../components/citizen-tabs/WorkTab";
+import BenefitsTab from "../components/citizen-tabs/BenefitsTab";
+import CasesTab from "../components/citizen-tabs/CasesTab";
 
 function CitizenCard({ citizens }) {
   const { id } = useParams();
-  const [activeTab, setActiveTab] = useState(0);
+  const [active, setActive] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
-  const [citizenData, setCitizenData] = useState(null);
+  const { data: citizenData, setData, save, loading } = useCitizen(
+    id,
+    citizens
+  );
 
-  useEffect(() => {
-    const citizen = citizens.find((c) => c.id === parseInt(id));
-    if (citizen) {
-      setCitizenData({ ...citizen });
-    }
-  }, [id, citizens]);
-
+  if (loading) return <div>Загрузка...</div>;
   if (!citizenData) return <div>Гражданин не найден</div>;
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setCitizenData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const saveChanges = () => {
-    localStorage.setItem(`citizen_${id}`, JSON.stringify(citizenData));
-    setIsEditing(false);
-    alert("Изменения сохранены!");
-  };
-
   const tabs = [
-    { label: "Основные сведения" },
-    { label: "Семья" },
-    { label: "Образование" },
-    { label: "Работа" },
-    { label: "Льготы" },
-    { label: "Обращения" },
+    { label: "Основные", comp: <MainTab citizen={citizenData} editing={isEditing} setCitizen={setData} /> },
+    { label: "Семья", comp: <FamilyTab citizen={citizenData} editing={isEditing} setCitizen={setData} /> },
+    { label: "Образование", comp: <EducationTab citizen={citizenData} editing={isEditing} setCitizen={setData} /> },
+    { label: "Работа", comp: <WorkTab citizen={citizenData} editing={isEditing} setCitizen={setData} /> },
+    { label: "Льготы", comp: <BenefitsTab citizen={citizenData} editing={isEditing} setCitizen={setData} /> },
+    { label: "Обращения", comp: <CasesTab citizen={citizenData} editing={isEditing} setCitizen={setData} /> },
   ];
 
   return (
     <Box sx={{ p: 2 }}>
-      {/* Заголовок */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-        <Avatar
-          src={citizenData.photo || ""}
-          alt={citizenData.fullName}
-          sx={{ width: 80, height: 80 }}
-        />
+      <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 3 }}>
+        <Avatar src={citizenData.photo} sx={{ width: 88, height: 88 }} />
         <Box>
           <Typography variant="h5">{citizenData.fullName}</Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography color="text.secondary">
             {citizenData.region} • {citizenData.gender}
           </Typography>
         </Box>
-        <Button
-          sx={{ ml: "auto" }}
-          variant="contained"
-          onClick={() => setIsEditing(!isEditing)}
-        >
-          {isEditing ? "Отменить" : "Редактировать"}
-        </Button>
+        <Box sx={{ ml: "auto", display: "flex", gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={<EditIcon />}
+            onClick={() => setIsEditing((s) => !s)}
+          >
+            {isEditing ? "Отменить" : "Редактировать"}
+          </Button>
+          {isEditing ? (
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<SaveIcon />}
+              onClick={() => {
+                save(citizenData);
+                setIsEditing(false);
+              }}
+            >
+              Сохранить
+            </Button>
+          ) : null}
+        </Box>
       </Box>
 
-      {/* Вкладки */}
       <Tabs
-        value={activeTab}
-        onChange={(e, newValue) => setActiveTab(newValue)}
+        value={active}
+        onChange={(e, v) => setActive(v)}
+        variant="scrollable"
+        scrollButtons="auto"
         sx={{ mb: 2 }}
       >
-        {tabs.map((tab, index) => (
-          <Tab key={index} label={tab.label} />
+        {tabs.map((t, i) => (
+          <Tab key={i} label={t.label} />
         ))}
       </Tabs>
 
-      {/* Содержимое вкладок */}
-      <Card>
-        <CardContent>
-          {activeTab === 0 && (
-            <Box sx={{ display: "grid", gap: 2 }}>
-              <TextField
-                label="ФИО"
-                name="fullName"
-                value={citizenData.fullName}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-              />
-              <TextField
-                type="date"
-                label="Дата рождения"
-                name="birthDate"
-                value={citizenData.birthDate}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-                InputLabelProps={{ shrink: true }}
-              />
-              <TextField
-                select
-                label="Пол"
-                name="gender"
-                value={citizenData.gender}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-              >
-                <MenuItem value="М">М</MenuItem>
-                <MenuItem value="Ж">Ж</MenuItem>
-              </TextField>
-              <TextField
-                label="СНИЛС"
-                name="snils"
-                value={citizenData.snils}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-              />
-              <TextField
-                label="ИНН"
-                name="inn"
-                value={citizenData.inn}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-              />
-              <TextField
-                label="Email"
-                name="email"
-                value={citizenData.email}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-              />
-              <TextField
-                label="Телефон"
-                name="phone"
-                value={citizenData.phone}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-              />
-              <TextField
-                multiline
-                label="Адрес регистрации"
-                name="regAddress"
-                value={citizenData.regAddress}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-              />
-              <TextField
-                multiline
-                label="Адрес проживания"
-                name="factAddress"
-                value={citizenData.factAddress}
-                onChange={handleInputChange}
-                disabled={!isEditing}
-              />
-            </Box>
-          )}
-
-          {activeTab === 4 && (
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                Социальные льготы
-              </Typography>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={citizenData.benefits.includes("инвалид")}
-                    disabled={!isEditing}
-                  />
-                }
-                label="Инвалид"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={citizenData.benefits.includes("многодетный")}
-                    disabled={!isEditing}
-                  />
-                }
-                label="Многодетный"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={citizenData.benefits.includes("ветеран")}
-                    disabled={!isEditing}
-                  />
-                }
-                label="Ветеран"
-              />
-            </Box>
-          )}
-
-          {activeTab === 5 && (
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                Обращения
-              </Typography>
-              <ul>
-                <li>Тема - Экология, дата - 2025-01-01</li>
-                <li>Тема - Льготы, дата - 2025-02-01</li>
-                <li>Тема - Жилье, дата - 2025-03-01</li>
-              </ul>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Кнопка сохранения */}
-      {isEditing && (
-        <Button
-          variant="contained"
-          sx={{ mt: 2 }}
-          onClick={saveChanges}
-        >
-          Сохранить
-        </Button>
-      )}
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.28 }}
+      >
+        <Card>
+          <CardContent>{tabs[active].comp}</CardContent>
+        </Card>
+      </motion.div>
     </Box>
   );
 }
