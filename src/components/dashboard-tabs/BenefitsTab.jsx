@@ -24,7 +24,7 @@ export default function BenefitsTab({ citizens }) {
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
-        <Card sx={{ minHeight: 600 }}>
+        <Card sx={{ minHeight: 400 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
               Социальные льготы

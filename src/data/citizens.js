@@ -58,7 +58,7 @@ function photo(gender) {
 }
 
 // Создание одного гражданина
-function createCitizen(id) {
+export function createCitizen(id) {
   const gender = Math.random() > 0.5 ? "М" : "Ж";
   const last = gender === "М" ? randomItem(LASTNAMES_M) : randomItem(LASTNAMES_F);;
   const first = gender === "М" ? randomItem(FIRSTNAMES_M) : randomItem(FIRSTNAMES_F);
@@ -173,4 +173,6 @@ function createCitizen(id) {
   };
 }
 
-export const mockCitizens = Array.from({ length: 200 }, (_, i) => createCitizen(i + 1));
+export const mockCitizens = Array.from({ length: 200 }, (_, i) =>
+  createCitizen(i + 1)
+);

@@ -48,7 +48,7 @@ export default function EducationTab({ citizens }) {
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} md={4}>
-        <Card sx={{ minHeight: 500 }}>
+        <Card sx={{ minHeight: 400 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
               Уровень образования
@@ -58,7 +58,7 @@ export default function EducationTab({ citizens }) {
         </Card>
       </Grid>
       <Grid item xs={12} md={4}>
-        <Card sx={{ minHeight: 500 }}>
+        <Card sx={{ minHeight: 400 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
               Специальности (ТОП-8)
@@ -68,7 +68,7 @@ export default function EducationTab({ citizens }) {
         </Card>
       </Grid>
       <Grid item xs={12} md={4}>
-        <Card sx={{ minHeight: 500 }}>
+        <Card sx={{ minHeight: 400 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
               ВУЗы (ТОП-8)

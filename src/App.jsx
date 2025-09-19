@@ -1,6 +1,7 @@
+// src/App.js
 import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import { mockCitizens } from "./data/citizens";
+import { createCitizen } from "./data/citizens"; // 👈 фабрика для генерации граждан
 import Dashboard from "./pages/Dashboard";
 import Catalog from "./pages/Catalog";
 import CitizenCard from "./pages/CitizenCard";
@@ -18,6 +19,8 @@ import {
   ListItemText,
   IconButton,
   Divider,
+  Button,
+  CircularProgress, // 👈 добавили лоадер
 } from "@mui/material";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
@@ -26,6 +29,28 @@ const drawerWidth = 260;
 
 function App() {
   const [mode, setMode] = useState("light");
+
+  // стейт с гражданами
+  const [citizens, setCitizens] = useState(() =>
+    Array.from({ length: 200 }, (_, i) => createCitizen(i + 1))
+  );
+
+  // стейт загрузки
+  const [loading, setLoading] = useState(false);
+
+  // переключение данных
+  const toggleDataset = () => {
+    setLoading(true);
+
+    setTimeout(() => {
+      const newSize = citizens.length === 200 ? 100000 : 200;
+      const newData = Array.from({ length: newSize }, (_, i) =>
+        createCitizen(i + 1)
+      );
+      setCitizens(newData);
+      setLoading(false);
+    }, 50);
+  };
 
   return (
     <ThemeProvider theme={theme(mode)}>
@@ -40,7 +65,9 @@ function App() {
               <IconButton
                 color="inherit"
                 sx={{ ml: "auto" }}
-                onClick={() => setMode((m) => (m === "light" ? "dark" : "light"))}
+                onClick={() =>
+                  setMode((m) => (m === "light" ? "dark" : "light"))
+                }
                 aria-label="toggle theme"
               >
                 {mode === "light" ? <Brightness4Icon /> : <Brightness7Icon />}
@@ -72,21 +99,54 @@ function App() {
                 <Divider sx={{ my: 1 }} />
                 <ListItem>
                   <ListItemText
-                    primary={`Граждан: ${mockCitizens.length.toLocaleString()}`}
+                    primary={`Граждан: ${citizens.length.toLocaleString()}`}
                     secondary="Данные сгенерированы"
                   />
+                </ListItem>
+                <ListItem
+                  sx={{ flexDirection: "column", alignItems: "flex-start" }}
+                >
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    fullWidth
+                    onClick={toggleDataset}
+                    disabled={loading}
+                  >
+                    {citizens.length === 200
+                      ? "Загрузить 100 000"
+                      : "Вернуть 200"}
+                  </Button>
+                  {loading && (
+                    <CircularProgress
+                      size={22}
+                      sx={{ mt: 1, alignSelf: "center" }}
+                    />
+                  )}
                 </ListItem>
               </List>
             </Box>
           </Drawer>
 
-          <Box component="main" sx={{ flexGrow: 1, bgcolor: "background.default", p: 3 }}>
+          <Box
+            component="main"
+            sx={{ flexGrow: 1, bgcolor: "background.default", p: 3 }}
+          >
             <Toolbar />
             <Routes>
-              <Route path="/" element={<Dashboard citizens={mockCitizens} />} />
-              <Route path="/dashboard" element={<Dashboard citizens={mockCitizens} />} />
-              <Route path="/catalog" element={<Catalog citizens={mockCitizens} />} />
-              <Route path="/catalog/:id" element={<CitizenCard citizens={mockCitizens} />} />
+              <Route path="/" element={<Dashboard citizens={citizens} />} />
+              <Route
+                path="/dashboard"
+                element={<Dashboard citizens={citizens} />}
+              />
+              <Route
+                path="/catalog"
+                element={<Catalog citizens={citizens} />}
+              />
+              <Route
+                path="/catalog/:id"
+                element={<CitizenCard citizens={citizens} />}
+              />
             </Routes>
           </Box>
         </Box>
