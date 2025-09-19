@@ -20,6 +20,14 @@ import EducationTab from "../components/citizen-tabs/EducationTab";
 import WorkTab from "../components/citizen-tabs/WorkTab";
 import BenefitsTab from "../components/citizen-tabs/BenefitsTab";
 import CasesTab from "../components/citizen-tabs/CasesTab";
+import RealEstateTab from "../components/citizen-tabs/RealEstateTab";
+import CarsTab from "../components/citizen-tabs/CarsTab";
+import CreditsTab from "../components/citizen-tabs/CreditsTab";
+import MedicalTab from "../components/citizen-tabs/MedicalTab";
+import TaxesTab from "../components/citizen-tabs/TaxesTab";
+import LegalCasesTab from "../components/citizen-tabs/LegalCasesTab";
+import MilitaryTab from "../components/citizen-tabs/MilitaryTab";
+import ExtraTab from "../components/citizen-tabs/ExtraTab";
 
 function CitizenCard({ citizens }) {
   const { id } = useParams();
@@ -40,16 +48,24 @@ function CitizenCard({ citizens }) {
   const genderLabel = citizenData.gender === "М" ? "Муж." : "Жен.";
 
   const tabs = [
-    { label: "Основные", comp: <MainTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
-    { label: "Семья", comp: <FamilyTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
-    { label: "Образование", comp: <EducationTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
-    { label: "Работа", comp: <WorkTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
-    { label: "Льготы", comp: <BenefitsTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
-    { label: "Обращения", comp: <CasesTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
-  ];
+  { label: "Основные", comp: <MainTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+  { label: "Семья", comp: <FamilyTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+  { label: "Образование", comp: <EducationTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+  { label: "Работа", comp: <WorkTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+  { label: "Льготы", comp: <BenefitsTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+  { label: "Недвижимость", comp: <RealEstateTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+  { label: "Автомобили", comp: <CarsTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+  { label: "Кредиты", comp: <CreditsTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+  { label: "Медицина", comp: <MedicalTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+  { label: "Налоги и страховки", comp: <TaxesTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+  { label: "Судимости", comp: <LegalCasesTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+  { label: "Воинский учёт", comp: <MilitaryTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+  { label: "Дополнительно", comp: <ExtraTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+  { label: "Обращения", comp: <CasesTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+];
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: 2, maxWidth: 1000, mx: "auto" }}>
       <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 3 }}>
         <Avatar src={draft?.photo} sx={{ width: 88, height: 88 }} />
         <Box>
