@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { mockCitizens } from "./data/citizens";
 import Dashboard from "./pages/Dashboard";
@@ -20,7 +21,6 @@ import {
 } from "@mui/material";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
-import { useState } from "react";
 
 const drawerWidth = 260;
 

@@ -5,7 +5,8 @@ function randomItem(arr) {
 }
 
 // ФИО
-const LASTNAMES = ["Иванов", "Петров", "Сидоров", "Кузнецов", "Смирнов", "Фёдоров", "Соловьёв", "Морозов", "Волков", "Егоров"];
+const LASTNAMES_M = ["Иванов", "Петров", "Сидоров", "Кузнецов", "Смирнов", "Фёдоров", "Соловьёв", "Морозов", "Волков", "Егоров"];
+const LASTNAMES_F = ["Иванова", "Петрова", "Сидорова", "Кузнецова", "Смирнова", "Фёдорова", "Соловьёва", "Морозова", "Волкова", "Егорова"];
 const FIRSTNAMES_M = ["Алексей", "Иван", "Павел", "Сергей", "Андрей", "Дмитрий", "Николай", "Владимир", "Олег", "Егор"];
 const FIRSTNAMES_F = ["Анна", "Мария", "Елена", "Ольга", "Татьяна", "Наталья", "Ирина", "Светлана", "Виктория", "Полина"];
 const PATRONYMICS_M = ["Иванович", "Петрович", "Сергеевич", "Александрович", "Андреевич", "Николаевич"];
@@ -59,7 +60,7 @@ function photo(gender) {
 // Создание одного гражданина
 function createCitizen(id) {
   const gender = Math.random() > 0.5 ? "М" : "Ж";
-  const last = randomItem(LASTNAMES);
+  const last = gender === "М" ? randomItem(LASTNAMES_M) : randomItem(LASTNAMES_F);;
   const first = gender === "М" ? randomItem(FIRSTNAMES_M) : randomItem(FIRSTNAMES_F);
   const patronymic = gender === "М" ? randomItem(PATRONYMICS_M) : randomItem(PATRONYMICS_F);
   const fullName = `${last} ${first} ${patronymic}`;
@@ -90,21 +91,35 @@ function createCitizen(id) {
     startDate: randomDate(2005, 2022),
   };
 
-  // семья
-  const family = [
-    {
-      fullName: `${randomItem(LASTNAMES)} ${randomItem(FIRSTNAMES_F)} ${randomItem(PATRONYMICS_F)}`,
+  // семья: учитываем пол для правильной генерации родственных связей
+  const family = [];
+  if (gender === "М") {
+    family.push({
+      fullName: `${randomItem(LASTNAMES_F)} ${randomItem(FIRSTNAMES_F)} ${randomItem(PATRONYMICS_F)}`,
       relation: "Жена",
       birthDate: randomDate(1965, 2002),
       snils: generateSnils(),
-    },
-    {
-      fullName: `${randomItem(LASTNAMES)} ${randomItem(FIRSTNAMES_M)} ${randomItem(PATRONYMICS_M)}`,
+    });
+    family.push({
+      fullName: `${randomItem(LASTNAMES_M)} ${randomItem(FIRSTNAMES_M)} ${randomItem(PATRONYMICS_M)}`,
       relation: "Сын",
       birthDate: randomDate(2000, 2015),
       snils: generateSnils(),
-    },
-  ];
+    });
+  } else {
+    family.push({
+      fullName: `${randomItem(LASTNAMES_M)} ${randomItem(FIRSTNAMES_M)} ${randomItem(PATRONYMICS_M)}`,
+      relation: "Муж",
+      birthDate: randomDate(1965, 2002),
+      snils: generateSnils(),
+    });
+    family.push({
+      fullName: `${randomItem(LASTNAMES_F)} ${randomItem(FIRSTNAMES_F)} ${randomItem(PATRONYMICS_F)}`,
+      relation: "Дочь",
+      birthDate: randomDate(2000, 2015),
+      snils: generateSnils(),
+    });
+  }
 
   // льготы
   const benefits = [];
@@ -112,7 +127,7 @@ function createCitizen(id) {
   if (Math.random() < 0.15) benefits.push("многодетный");
   if (Math.random() < 0.1) benefits.push("ветеран");
 
-  // --- ДОБАВЛЯЕМ ПОЛЯ ДЛЯ ДАШБОРДОВ ---
+  // --- ДОБАВЛЯЕМ ПОЛЯ ДЛЯ ДАШБОРДОВ ---  
   const maritalStatuses = ["Женат/Замужем", "Холост/Не замужем", "Разведён/Разведена"];
   const maritalStatus = randomItem(maritalStatuses);
 

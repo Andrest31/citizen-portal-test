@@ -101,7 +101,7 @@ function Catalog({ citizens }) {
       </Paper>
 
       {/* Таблица */}
-      <div style={{ height: 700, width: "100%" }}>
+      <div style={{ height: 700, width: 900 }}>
         <DataGrid
           rows={filteredCitizens.map((c) => ({
             id: c.id,
