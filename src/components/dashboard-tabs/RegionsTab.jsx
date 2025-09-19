@@ -32,7 +32,7 @@ export default function RegionsTab({ citizens }) {
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
-        <Card sx={{ minHeight: 700 }}>
+        <Card sx={{ minHeight: 400, minWidth: 800 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
               ТОП регионов (по населению)

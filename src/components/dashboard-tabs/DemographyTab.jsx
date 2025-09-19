@@ -38,7 +38,7 @@ export default function DemographyTab({ citizens }) {
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} md={6}>
-        <Card sx={{ minHeight: 600 }}>
+        <Card sx={{ minHeight: 400 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
               Пол
@@ -49,7 +49,7 @@ export default function DemographyTab({ citizens }) {
       </Grid>
 
       <Grid item xs={12} md={6}>
-        <Card sx={{ minHeight: 600 }}>
+        <Card sx={{ minHeight: 400 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
               Семейное положение

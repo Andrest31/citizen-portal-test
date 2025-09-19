@@ -66,7 +66,7 @@ export default function TrendsTab() {
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
-        <Card sx={{ minHeight: 700 }}>
+        <Card sx={{ minHeight: 400, minWidth: 800 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
               Тренды населения (последние 24 периода)

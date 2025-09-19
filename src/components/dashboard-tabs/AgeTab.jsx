@@ -25,7 +25,10 @@ export default function AgeTab({ citizens }) {
         label: "Численность",
         data: counts,
         // динамические цвета
-        backgroundColor: counts.map((v, i) => `rgba(${50 + i * 8}, ${120 + (i % 3) * 30}, ${180 - i * 4}, 0.85)`),
+        backgroundColor: counts.map(
+          (v, i) =>
+            `rgba(${50 + i * 8}, ${120 + (i % 3) * 30}, ${180 - i * 4}, 0.85)`
+        ),
       },
     ],
   };
@@ -41,7 +44,7 @@ export default function AgeTab({ citizens }) {
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
-        <Card sx={{ minHeight: 720 }}>
+        <Card sx={{ minHeight: 320, minWidth: 800 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
               Возрастная структура
