@@ -1,57 +1,34 @@
 import { Grid, Card, CardContent, Typography } from "@mui/material";
 import { PolarArea } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  RadialLinearScale,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  RadialLinearScale,
-  Tooltip,
-  Legend
-);
+import "./_chartSetup";
 
 export default function BenefitsTab({ citizens }) {
-  const benefits = citizens.reduce(
-    (acc, c) => {
-      c.benefits?.forEach((b) => {
-        acc[b] = (acc[b] || 0) + 1;
-      });
-      return acc;
-    },
-    {}
-  );
+  const benefits = citizens.reduce((acc, c) => {
+    (c.benefits || []).forEach((b) => {
+      acc[b] = (acc[b] || 0) + 1;
+    });
+    return acc;
+  }, {});
 
+  const labels = Object.keys(benefits);
   const data = {
-    labels: Object.keys(benefits),
+    labels,
     datasets: [
       {
         data: Object.values(benefits),
-        backgroundColor: ["#AB47BC", "#29B6F6", "#FFA726"],
+        backgroundColor: labels.map((_, i) => `rgba(${180 - i * 8}, ${120 + i * 6}, ${150 + i * 4}, 0.85)`),
       },
     ],
   };
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} md={6}>
-        <Card sx={{ minHeight: 400 }}>
+      <Grid item xs={12}>
+        <Card sx={{ minHeight: 600 }}>
           <CardContent>
-            <Typography>Социальные льготы</Typography>
+            <Typography variant="h6" gutterBottom>
+              Социальные льготы
+            </Typography>
             <PolarArea data={data} />
           </CardContent>
         </Card>

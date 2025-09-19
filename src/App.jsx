@@ -16,6 +16,7 @@ import {
   ListItem,
   ListItemText,
   IconButton,
+  Divider,
 } from "@mui/material";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
@@ -29,17 +30,18 @@ function App() {
   return (
     <ThemeProvider theme={theme(mode)}>
       <Router>
-        <Box sx={{ display: "flex" }}>
+        <Box sx={{ display: "flex", minHeight: "100vh" }}>
           <CssBaseline />
           <AppBar position="fixed" sx={{ zIndex: (t) => t.zIndex.drawer + 1 }}>
             <Toolbar>
               <Typography variant="h6" noWrap component="div">
-                Портал учета граждан
+                Портал учета граждан — Аналитика
               </Typography>
               <IconButton
                 color="inherit"
                 sx={{ ml: "auto" }}
                 onClick={() => setMode((m) => (m === "light" ? "dark" : "light"))}
+                aria-label="toggle theme"
               >
                 {mode === "light" ? <Brightness4Icon /> : <Brightness7Icon />}
               </IconButton>
@@ -67,28 +69,24 @@ function App() {
                 <ListItem button component={Link} to="/catalog">
                   <ListItemText primary="Картотека" />
                 </ListItem>
+                <Divider sx={{ my: 1 }} />
+                <ListItem>
+                  <ListItemText
+                    primary={`Граждан: ${mockCitizens.length.toLocaleString()}`}
+                    secondary="Данные сгенерированы"
+                  />
+                </ListItem>
               </List>
             </Box>
           </Drawer>
 
-          <Box
-            component="main"
-            sx={{ flexGrow: 1, bgcolor: "background.default", p: 3 }}
-          >
+          <Box component="main" sx={{ flexGrow: 1, bgcolor: "background.default", p: 3 }}>
             <Toolbar />
             <Routes>
-              <Route
-                path="/dashboard"
-                element={<Dashboard citizens={mockCitizens} />}
-              />
-              <Route
-                path="/catalog"
-                element={<Catalog citizens={mockCitizens} />}
-              />
-              <Route
-                path="/catalog/:id"
-                element={<CitizenCard citizens={mockCitizens} />}
-              />
+              <Route path="/" element={<Dashboard citizens={mockCitizens} />} />
+              <Route path="/dashboard" element={<Dashboard citizens={mockCitizens} />} />
+              <Route path="/catalog" element={<Catalog citizens={mockCitizens} />} />
+              <Route path="/catalog/:id" element={<CitizenCard citizens={mockCitizens} />} />
             </Routes>
           </Box>
         </Box>

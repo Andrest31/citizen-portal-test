@@ -33,6 +33,8 @@ function CitizenCard({ citizens }) {
   if (loading) return <div>Загрузка...</div>;
   if (!citizenData) return <div>Гражданин не найден</div>;
 
+  const genderLabel = citizenData.gender === "М" ? "Муж." : "Жен.";
+
   const tabs = [
     { label: "Основные", comp: <MainTab citizen={citizenData} editing={isEditing} setCitizen={setData} /> },
     { label: "Семья", comp: <FamilyTab citizen={citizenData} editing={isEditing} setCitizen={setData} /> },
@@ -49,7 +51,7 @@ function CitizenCard({ citizens }) {
         <Box>
           <Typography variant="h5">{citizenData.fullName}</Typography>
           <Typography color="text.secondary">
-            {citizenData.region} • {citizenData.gender}
+            {citizenData.region} • {genderLabel}
           </Typography>
         </Box>
         <Box sx={{ ml: "auto", display: "flex", gap: 1 }}>

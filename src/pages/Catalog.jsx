@@ -41,6 +41,7 @@ function Catalog({ citizens }) {
     { field: "birthDate", headerName: "Дата рождения", width: 150, sortable: true },
     { field: "region", headerName: "Регион", width: 180, sortable: true },
     { field: "snils", headerName: "СНИЛС", width: 180 },
+    { field: "gender", headerName: "Пол", width: 120 },
   ];
 
   return (
@@ -93,7 +94,7 @@ function Catalog({ citizens }) {
           <MenuItem value="">Все</MenuItem>
           {uniqueGenders.map((g) => (
             <MenuItem key={g} value={g}>
-              {g}
+              {g === "М" ? "Муж." : "Жен."}
             </MenuItem>
           ))}
         </TextField>
@@ -108,6 +109,7 @@ function Catalog({ citizens }) {
             birthDate: c.birthDate,
             region: c.region,
             snils: c.snils,
+            gender: c.gender === "М" ? "Муж." : "Жен.",
           }))}
           columns={columns}
           pageSize={pageSize}
@@ -117,8 +119,7 @@ function Catalog({ citizens }) {
           paginationMode="client"
           disableSelectionOnClick
           onRowClick={(params) => navigate(`/catalog/${params.id}`)}
-          experimentalFeatures={{ newEditingApi: true }}
-          rowBuffer={5} // сколько строк загружается за экран (ускоряет скролл)
+          rowBuffer={5}
         />
       </div>
     </Box>

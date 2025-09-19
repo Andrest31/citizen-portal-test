@@ -6,20 +6,17 @@ export function useCitizen(id, citizens) {
 
   useEffect(() => {
     setLoading(true);
-    const fromLocal = localStorage.getItem(`citizen_${id}`);
-    if (fromLocal) {
-      setData(JSON.parse(fromLocal));
-      setLoading(false);
-      return;
-    }
-    const c = citizens.find((x) => x.id === Number(id));
-    setData(c ? { ...c } : null);
+
+    // приводим id и у граждан к строке, чтобы исключить проблему "5" !== 5
+    const found = citizens.find((c) => String(c.id) === String(id));
+
+    setData(found || null);
     setLoading(false);
   }, [id, citizens]);
 
-  const save = (newData) => {
-    setData(newData);
-    localStorage.setItem(`citizen_${id}`, JSON.stringify(newData));
+  const save = (updated) => {
+    console.log("Сохраняем", updated);
+    // здесь позже можно будет добавить API-запрос или локальное обновление
   };
 
   return { data, setData, save, loading };

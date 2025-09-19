@@ -1,31 +1,6 @@
 import { Grid, Card, CardContent, Typography } from "@mui/material";
 import { Doughnut } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  RadialLinearScale,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  RadialLinearScale,
-  Tooltip,
-  Legend
-);
-
-ChartJS.register(ArcElement, Tooltip, Legend);
+import "./_chartSetup";
 
 export default function EducationTab({ citizens }) {
   const educationCounts = citizens.reduce((acc, c) => {
@@ -33,12 +8,13 @@ export default function EducationTab({ citizens }) {
     return acc;
   }, {});
 
+  const labels = Object.keys(educationCounts);
   const data = {
-    labels: Object.keys(educationCounts),
+    labels,
     datasets: [
       {
         data: Object.values(educationCounts),
-        backgroundColor: ["#FFB74D", "#4DB6AC", "#9575CD"],
+        backgroundColor: labels.map((_, i) => `rgba(${120 + i * 10}, ${160 - i * 12}, ${200 - i * 8}, 0.85)`),
       },
     ],
   };
@@ -46,9 +22,11 @@ export default function EducationTab({ citizens }) {
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
-        <Card sx={{ minHeight: 400 }}>
+        <Card sx={{ minHeight: 600 }}>
           <CardContent>
-            <Typography>Уровень образования</Typography>
+            <Typography variant="h6" gutterBottom>
+              Уровень образования
+            </Typography>
             <Doughnut data={data} />
           </CardContent>
         </Card>

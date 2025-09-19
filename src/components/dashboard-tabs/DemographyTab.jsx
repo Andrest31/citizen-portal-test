@@ -1,31 +1,6 @@
 import { Grid, Card, CardContent, Typography } from "@mui/material";
 import { Pie, Radar } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  RadialLinearScale,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  RadialLinearScale,
-  Tooltip,
-  Legend
-);
-
-ChartJS.register(ArcElement, RadialLinearScale, Tooltip, Legend);
+import "./_chartSetup";
 
 export default function DemographyTab({ citizens }) {
   const genderCounts = citizens.reduce((acc, c) => {
@@ -54,7 +29,7 @@ export default function DemographyTab({ citizens }) {
       {
         label: "Семейное положение",
         data: Object.values(maritalCounts),
-        backgroundColor: "rgba(29,155,240,0.3)",
+        backgroundColor: "rgba(29,155,240,0.25)",
         borderColor: "#1d9bf0",
       },
     ],
@@ -63,17 +38,22 @@ export default function DemographyTab({ citizens }) {
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} md={6}>
-        <Card sx={{ minHeight: 400 }}>
+        <Card sx={{ minHeight: 600 }}>
           <CardContent>
-            <Typography>Пол</Typography>
+            <Typography variant="h6" gutterBottom>
+              Пол
+            </Typography>
             <Pie data={genderPie} />
           </CardContent>
         </Card>
       </Grid>
+
       <Grid item xs={12} md={6}>
-        <Card sx={{ minHeight: 400 }}>
+        <Card sx={{ minHeight: 600 }}>
           <CardContent>
-            <Typography>Семейное положение</Typography>
+            <Typography variant="h6" gutterBottom>
+              Семейное положение
+            </Typography>
             <Radar data={maritalRadar} />
           </CardContent>
         </Card>
