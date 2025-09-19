@@ -1,6 +1,11 @@
 import { Box, TextField } from "@mui/material";
 
 export default function MainTab({ citizen, editing, setCitizen }) {
+  // Защита от null или undefined для citizen
+  if (!citizen) {
+    return <div>Гражданин не найден</div>; // Можно добавить обработку ошибки или загрузки
+  }
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setCitizen({ ...citizen, [name]: value });
@@ -11,7 +16,7 @@ export default function MainTab({ citizen, editing, setCitizen }) {
       <TextField
         label="ФИО"
         name="fullName"
-        value={citizen.fullName}
+        value={citizen.fullName || ''} // Защита от null
         onChange={handleChange}
         disabled={!editing}
       />
@@ -19,7 +24,7 @@ export default function MainTab({ citizen, editing, setCitizen }) {
         type="date"
         label="Дата рождения"
         name="birthDate"
-        value={citizen.birthDate}
+        value={citizen.birthDate || ''} // Защита от null
         onChange={handleChange}
         disabled={!editing}
         InputLabelProps={{ shrink: true }}
@@ -27,21 +32,21 @@ export default function MainTab({ citizen, editing, setCitizen }) {
       <TextField
         label="Email"
         name="email"
-        value={citizen.email}
+        value={citizen.email || ''} // Защита от null
         onChange={handleChange}
         disabled={!editing}
       />
       <TextField
         label="Телефон"
         name="phone"
-        value={citizen.phone}
+        value={citizen.phone || ''} // Защита от null
         onChange={handleChange}
         disabled={!editing}
       />
       <TextField
         label="Адрес регистрации"
         name="regAddress"
-        value={citizen.regAddress}
+        value={citizen.regAddress || ''} // Защита от null
         onChange={handleChange}
         disabled={!editing}
         multiline

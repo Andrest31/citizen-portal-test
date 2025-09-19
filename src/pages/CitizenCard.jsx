@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
   Box,
@@ -25,10 +25,14 @@ function CitizenCard({ citizens }) {
   const { id } = useParams();
   const [active, setActive] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
-  const { data: citizenData, setData, save, loading } = useCitizen(
-    id,
-    citizens
-  );
+  const { data: citizenData, setData, save, loading } = useCitizen(id, citizens);
+
+  // локальный стейт для редактируемой копии
+  const [draft, setDraft] = useState(null);
+
+  useEffect(() => {
+    setDraft(citizenData); // при загрузке данных обновляем черновик
+  }, [citizenData]);
 
   if (loading) return <div>Загрузка...</div>;
   if (!citizenData) return <div>Гражданин не найден</div>;
@@ -36,29 +40,39 @@ function CitizenCard({ citizens }) {
   const genderLabel = citizenData.gender === "М" ? "Муж." : "Жен.";
 
   const tabs = [
-    { label: "Основные", comp: <MainTab citizen={citizenData} editing={isEditing} setCitizen={setData} /> },
-    { label: "Семья", comp: <FamilyTab citizen={citizenData} editing={isEditing} setCitizen={setData} /> },
-    { label: "Образование", comp: <EducationTab citizen={citizenData} editing={isEditing} setCitizen={setData} /> },
-    { label: "Работа", comp: <WorkTab citizen={citizenData} editing={isEditing} setCitizen={setData} /> },
-    { label: "Льготы", comp: <BenefitsTab citizen={citizenData} editing={isEditing} setCitizen={setData} /> },
-    { label: "Обращения", comp: <CasesTab citizen={citizenData} editing={isEditing} setCitizen={setData} /> },
+    { label: "Основные", comp: <MainTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+    { label: "Семья", comp: <FamilyTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+    { label: "Образование", comp: <EducationTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+    { label: "Работа", comp: <WorkTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+    { label: "Льготы", comp: <BenefitsTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
+    { label: "Обращения", comp: <CasesTab citizen={draft} editing={isEditing} setCitizen={setDraft} /> },
   ];
 
   return (
     <Box sx={{ p: 2 }}>
       <Box sx={{ display: "flex", gap: 2, alignItems: "center", mb: 3 }}>
-        <Avatar src={citizenData.photo} sx={{ width: 88, height: 88 }} />
+        <Avatar src={draft?.photo} sx={{ width: 88, height: 88 }} />
         <Box>
-          <Typography variant="h5">{citizenData.fullName}</Typography>
+          <Typography variant="h5">{draft?.fullName}</Typography>
           <Typography color="text.secondary">
-            {citizenData.region} • {genderLabel}
+            {draft?.region} • {genderLabel}
           </Typography>
         </Box>
         <Box sx={{ ml: "auto", display: "flex", gap: 1 }}>
           <Button
             variant="outlined"
             startIcon={<EditIcon />}
-            onClick={() => setIsEditing((s) => !s)}
+            onClick={() => {
+              if (isEditing) {
+                // отмена: вернемся к оригинальным данным
+                setDraft(citizenData);
+                setIsEditing(false);
+              } else {
+                // начало редактирования: копируем оригинал
+                setDraft({ ...citizenData });
+                setIsEditing(true);
+              }
+            }}
           >
             {isEditing ? "Отменить" : "Редактировать"}
           </Button>
@@ -68,7 +82,8 @@ function CitizenCard({ citizens }) {
               color="primary"
               startIcon={<SaveIcon />}
               onClick={() => {
-                save(citizenData);
+                save(draft);
+                setData(draft); // обновляем оригинал
                 setIsEditing(false);
               }}
             >
