@@ -1,7 +1,6 @@
-// src/App.js
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import { createCitizen } from "./data/citizens"; // 👈 фабрика для генерации граждан
+import { createCitizen } from "./data/citizens"; // фабрика для генерации граждан
 import Dashboard from "./pages/Dashboard";
 import Catalog from "./pages/Catalog";
 import CitizenCard from "./pages/CitizenCard";
@@ -20,39 +19,103 @@ import {
   IconButton,
   Divider,
   Button,
-  CircularProgress, // 👈 добавили лоадер
+  CircularProgress,
 } from "@mui/material";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 
 const drawerWidth = 260;
 
-function App() {
+const OVERRIDES_KEY = "citizen_overrides_v1";
+
+function applyOverrides(citizensArr, overrides) {
+  if (!overrides || Object.keys(overrides).length === 0) return citizensArr;
+  // формируем map по id для быстрого доступа
+  const map = {};
+  for (const c of citizensArr) {
+    map[String(c.id)] = c;
+  }
+  // применяем overrides: если нет оригинала (редкий случай), всё равно добавим override как отдельную запись
+  const result = [...citizensArr];
+  for (const [k, val] of Object.entries(overrides)) {
+    if (map[k]) {
+      // заменяем существующую запись
+      result[result.findIndex((r) => String(r.id) === k)] = { ...map[k], ...val };
+    } else {
+      // добавляем новый объект (редко)
+      result.push(val);
+    }
+  }
+  return result;
+}
+
+function readOverrides() {
+  try {
+    const raw = localStorage.getItem(OVERRIDES_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    console.warn("Ошибка чтения overrides:", e);
+    return {};
+  }
+}
+
+export default function App() {
   const [mode, setMode] = useState("light");
 
-  // стейт с гражданами
-  const [citizens, setCitizens] = useState(() =>
-    Array.from({ length: 200 }, (_, i) => createCitizen(i + 1))
-  );
+  // начальная генерация данных (200) — но применяем overrides из localStorage
+  const [citizens, setCitizens] = useState(() => {
+    const base = Array.from({ length: 200 }, (_, i) => createCitizen(i + 1));
+    const overrides = readOverrides();
+    return applyOverrides(base, overrides);
+  });
 
-  // стейт загрузки
   const [loading, setLoading] = useState(false);
 
-const worker = new Worker(
-  new URL("./workers/citizenWorker.js", import.meta.url),
-  { type: "module" } 
-);
-  // переключение данных
-  const toggleDataset = () => {
-  setLoading(true);
-  const newSize = citizens.length === 200 ? 100000 : 200;
-  worker.postMessage({ size: newSize });
+  // Web Worker для генерации больших наборов
+  const workerRef = useMemo(() => {
+    // создаём воркер динамически: если сборка не поддерживает new Worker(new URL(...)) — оставляем null
+    try {
+      return new Worker(new URL("./workers/citizenWorker.js", import.meta.url), { type: "module" });
+    } catch (e) {
+      console.warn("Worker не создан — возможно сборщик не поддерживает new Worker(URL).", e);
+      return null;
+    }
+  }, []);
 
-  worker.onmessage = (e) => {
-    setCitizens(e.data);
-    setLoading(false);
+  useEffect(() => {
+    if (!workerRef) return;
+    const onMessage = (e) => {
+      // получаем массив и применяем overrides
+      const overrides = readOverrides();
+      const applied = applyOverrides(e.data, overrides);
+      setCitizens(applied);
+      setLoading(false);
+    };
+    workerRef.addEventListener("message", onMessage);
+    return () => {
+      workerRef.removeEventListener("message", onMessage);
+    };
+  }, [workerRef]);
+
+  // переключение между 200 и 100000 (генерация через воркер)
+  const toggleDataset = () => {
+    if (!workerRef) {
+      // если воркеры недоступны — делаем синхронную генерацию (в фоне UI може "подвиснуть")
+      setLoading(true);
+      setTimeout(() => {
+        const newSize = citizens.length === 200 ? 100000 : 200;
+        const arr = Array.from({ length: newSize }, (_, i) => createCitizen(i + 1));
+        const applied = applyOverrides(arr, readOverrides());
+        setCitizens(applied);
+        setLoading(false);
+      }, 60);
+      return;
+    }
+
+    setLoading(true);
+    const newSize = citizens.length === 200 ? 100000 : 200;
+    workerRef.postMessage({ size: newSize });
   };
-};
 
   return (
     <ThemeProvider theme={theme(mode)}>
@@ -67,9 +130,7 @@ const worker = new Worker(
               <IconButton
                 color="inherit"
                 sx={{ ml: "auto" }}
-                onClick={() =>
-                  setMode((m) => (m === "light" ? "dark" : "light"))
-                }
+                onClick={() => setMode((m) => (m === "light" ? "dark" : "light"))}
                 aria-label="toggle theme"
               >
                 {mode === "light" ? <Brightness4Icon /> : <Brightness7Icon />}
@@ -105,50 +166,23 @@ const worker = new Worker(
                     secondary="Данные сгенерированы"
                   />
                 </ListItem>
-                <ListItem
-                  sx={{ flexDirection: "column", alignItems: "flex-start" }}
-                >
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    fullWidth
-                    onClick={toggleDataset}
-                    disabled={loading}
-                  >
-                    {citizens.length === 200
-                      ? "Загрузить 100 000"
-                      : "Вернуть 200"}
+                <ListItem sx={{ flexDirection: "column", alignItems: "flex-start" }}>
+                  <Button variant="outlined" size="small" fullWidth onClick={toggleDataset} disabled={loading}>
+                    {citizens.length === 200 ? "Загрузить 100 000" : "Вернуть 200"}
                   </Button>
-                  {loading && (
-                    <CircularProgress
-                      size={22}
-                      sx={{ mt: 1, alignSelf: "center" }}
-                    />
-                  )}
+                  {loading && <CircularProgress size={22} sx={{ mt: 1, alignSelf: "center" }} />}
                 </ListItem>
               </List>
             </Box>
           </Drawer>
 
-          <Box
-            component="main"
-            sx={{ flexGrow: 1, bgcolor: "background.default", p: 3 }}
-          >
+          <Box component="main" sx={{ flexGrow: 1, bgcolor: "background.default", p: 3 }}>
             <Toolbar />
             <Routes>
               <Route path="/" element={<Dashboard citizens={citizens} />} />
-              <Route
-                path="/dashboard"
-                element={<Dashboard citizens={citizens} />}
-              />
-              <Route
-                path="/catalog"
-                element={<Catalog citizens={citizens} />}
-              />
-              <Route
-                path="/catalog/:id"
-                element={<CitizenCard citizens={citizens} />}
-              />
+              <Route path="/dashboard" element={<Dashboard citizens={citizens} />} />
+              <Route path="/catalog" element={<Catalog citizens={citizens} />} />
+              <Route path="/catalog/:id" element={<CitizenCard citizens={citizens} setCitizens={setCitizens} />} />
             </Routes>
           </Box>
         </Box>
@@ -156,5 +190,3 @@ const worker = new Worker(
     </ThemeProvider>
   );
 }
-
-export default App;
