@@ -1,3 +1,4 @@
+// src/components/citizen-tabs/BenefitsTab.js
 import { Box, Typography, FormControlLabel, Checkbox } from "@mui/material";
 
 export default function BenefitsTab({ citizen, editing, setCitizen }) {
@@ -14,7 +15,7 @@ export default function BenefitsTab({ citizen, editing, setCitizen }) {
   return (
     <Box sx={{ display: "grid", gap: 1 }}>
       <Typography variant="h6">Социальные льготы</Typography>
-      {["инвалид", "многодетный", "ветеран"].map((b) => (
+      {["инвалид", "многодетный", "ветеран", "Герой труда", "Участник ВОВ", "Чернобыль"].map((b) => (
         <FormControlLabel
           key={b}
           control={

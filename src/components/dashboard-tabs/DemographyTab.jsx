@@ -4,12 +4,18 @@ import "./_chartSetup";
 
 export default function DemographyTab({ citizens }) {
   const genderCounts = citizens.reduce((acc, c) => {
-    acc[c.gender] = (acc[c.gender] || 0) + 1;
+    const gender = c.personalInfo?.gender;
+    if (gender) {
+      acc[gender] = (acc[gender] || 0) + 1;
+    }
     return acc;
   }, {});
 
   const maritalCounts = citizens.reduce((acc, c) => {
-    acc[c.maritalStatus] = (acc[c.maritalStatus] || 0) + 1;
+    const status = c.maritalStatus;
+    if (status) {
+      acc[status] = (acc[status] || 0) + 1;
+    }
     return acc;
   }, {});
 
@@ -35,6 +41,11 @@ export default function DemographyTab({ citizens }) {
     ],
   };
 
+  const radarOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+  };
+
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} md={6}>
@@ -50,11 +61,11 @@ export default function DemographyTab({ citizens }) {
 
       <Grid item xs={12} md={6}>
         <Card sx={{ minHeight: 400 }}>
-          <CardContent>
+          <CardContent sx={{ height: 350 }}>
             <Typography variant="h6" gutterBottom>
               Семейное положение
             </Typography>
-            <Radar data={maritalRadar} />
+            <Radar data={maritalRadar} options={radarOptions} />
           </CardContent>
         </Card>
       </Grid>

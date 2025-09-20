@@ -1,3 +1,4 @@
+// src/components/dashboard-tabs/BenefitsTab.jsx
 import { Grid, Card, CardContent, Typography } from "@mui/material";
 import { PolarArea } from "react-chartjs-2";
 import "./_chartSetup";
@@ -21,15 +22,20 @@ export default function BenefitsTab({ citizens }) {
     ],
   };
 
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+  };
+
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
         <Card sx={{ minHeight: 400 }}>
-          <CardContent>
+          <CardContent sx={{ height: 350 }}>
             <Typography variant="h6" gutterBottom>
               Социальные льготы
             </Typography>
-            <PolarArea data={data} />
+            <PolarArea data={data} options={options} />
           </CardContent>
         </Card>
       </Grid>

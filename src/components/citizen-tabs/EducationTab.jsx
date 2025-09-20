@@ -1,24 +1,30 @@
+// src/components/citizen-tabs/EducationTab.jsx
 import { Box, Typography, TextField, Button, IconButton } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 export default function EducationTab({ citizen, editing, setCitizen }) {
+  // Убедимся, что education - это массив
+  const educationList = Array.isArray(citizen.education) ? citizen.education : [];
+
   const handleChange = (idx, key, value) => {
-    const education = [...(citizen.education || [])];
+    const education = [...educationList];
+    // Убеждаемся, что элемент существует
+    if (!education[idx]) education[idx] = {};
     education[idx] = { ...education[idx], [key]: value };
     setCitizen({ ...citizen, education });
   };
 
   const addEdu = () => {
     const education = [
-      ...(citizen.education || []),
-      { institution: "", specialty: "", graduationYear: "", diplomaNum: "" },
+      ...educationList,
+      { institution: "", specialty: "", graduationYear: "", diplomaSeries: "", diplomaNumber: "" },
     ];
     setCitizen({ ...citizen, education });
   };
 
   const removeEdu = (idx) => {
-    const education = [...(citizen.education || [])];
+    const education = [...educationList];
     education.splice(idx, 1);
     setCitizen({ ...citizen, education });
   };
@@ -31,19 +37,19 @@ export default function EducationTab({ citizen, editing, setCitizen }) {
           Добавить
         </Button>
       )}
-      {(citizen.education || []).map((e, idx) => (
+      {educationList.map((e, idx) => (
         <Box
           key={idx}
           sx={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr 120px 120px auto",
+            gridTemplateColumns: "1fr 1fr 120px 120px 120px auto",
             gap: 1,
             alignItems: "center",
           }}
         >
           <TextField
             label="Учреждение"
-            value={e.institution}
+            value={e.institution || ''}
             onChange={(ev) =>
               handleChange(idx, "institution", ev.target.value)
             }
@@ -51,7 +57,7 @@ export default function EducationTab({ citizen, editing, setCitizen }) {
           />
           <TextField
             label="Специальность"
-            value={e.specialty}
+            value={e.specialty || ''}
             onChange={(ev) =>
               handleChange(idx, "specialty", ev.target.value)
             }
@@ -59,26 +65,36 @@ export default function EducationTab({ citizen, editing, setCitizen }) {
           />
           <TextField
             label="Год выпуска"
-            value={e.graduationYear}
+            type="number"
+            value={e.graduationYear || ''}
             onChange={(ev) =>
               handleChange(idx, "graduationYear", ev.target.value)
             }
             disabled={!editing}
           />
           <TextField
-            label="Диплом №"
-            value={e.diplomaNum}
+            label="Серия диплома"
+            value={e.diplomaSeries || ''}
             onChange={(ev) =>
-              handleChange(idx, "diplomaNum", ev.target.value)
+              handleChange(idx, "diplomaSeries", ev.target.value)
             }
             disabled={!editing}
           />
-          <IconButton
-            onClick={() => removeEdu(idx)}
+          <TextField
+            label="Номер диплома"
+            value={e.diplomaNumber || ''}
+            onChange={(ev) =>
+              handleChange(idx, "diplomaNumber", ev.target.value)
+            }
             disabled={!editing}
-          >
-            <DeleteIcon />
-          </IconButton>
+          />
+          {editing && (
+            <IconButton
+              onClick={() => removeEdu(idx)}
+            >
+              <DeleteIcon />
+            </IconButton>
+          )}
         </Box>
       ))}
     </Box>

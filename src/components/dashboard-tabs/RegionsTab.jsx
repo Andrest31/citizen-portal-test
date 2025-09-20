@@ -1,13 +1,17 @@
+// src/components/dashboard-tabs/RegionsTab.jsx
 import { Grid, Card, CardContent, Typography } from "@mui/material";
 import { Bar } from "react-chartjs-2";
 import "./_chartSetup";
 
 export default function RegionsTab({ citizens }) {
   const regionCounts = citizens.reduce((acc, c) => {
-    acc[c.region] = (acc[c.region] || 0) + 1;
+    const region = c.region;
+    if (region) {
+      acc[region] = (acc[region] || 0) + 1;
+    }
     return acc;
   }, {});
-
+  
   const topRegions = Object.entries(regionCounts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 12);
@@ -26,14 +30,22 @@ export default function RegionsTab({ citizens }) {
   const options = {
     indexAxis: "y",
     plugins: { legend: { display: false } },
-    scales: { x: { ticks: { callback: (v) => Number(v).toLocaleString() } } },
+    scales: { 
+      x: { 
+        ticks: { 
+          callback: (v) => Number(v).toLocaleString() 
+        } 
+      } 
+    },
+    responsive: true,
+    maintainAspectRatio: false,
   };
 
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
         <Card sx={{ minHeight: 400, minWidth: 800 }}>
-          <CardContent>
+          <CardContent sx={{ height: 350 }}>
             <Typography variant="h6" gutterBottom>
               ТОП регионов (по населению)
             </Typography>

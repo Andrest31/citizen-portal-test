@@ -10,34 +10,46 @@ function Catalog({ citizens }) {
   const [genderFilter, setGenderFilter] = useState("");
   const [pageSize, setPageSize] = useState(50);
 
-  // Уникальные значения для фильтров
   const uniqueRegions = useMemo(
-    () => [...new Set(citizens.map((c) => c.region))],
+    () => [...new Set(citizens.map((c) => c.region || ""))],
     [citizens]
   );
-  const uniqueGenders = ["М", "Ж"];
 
-  // Отфильтрованные данные
+  const uniqueGenders = [
+    { value: "М", label: "Муж." },
+    { value: "Ж", label: "Жен." },
+  ];
+
+  // Фильтрация
   const filteredCitizens = useMemo(() => {
     return citizens.filter((c) => {
-      const nameMatch = c.fullName
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      const regionMatch = !regionFilter || c.region === regionFilter;
-      const genderMatch = !genderFilter || c.gender === genderFilter;
+      const fullName = c.personalInfo?.fullName || "";
+      const nameMatch = fullName.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const citizenRegion = c.region || "";
+      const regionMatch = !regionFilter || citizenRegion === regionFilter;
+
+      const citizenGender = c.personalInfo?.gender || "";
+      const genderMatch = !genderFilter || citizenGender === genderFilter;
+
       return nameMatch && regionMatch && genderMatch;
     });
   }, [citizens, searchTerm, regionFilter, genderFilter]);
 
+  // Строки (все значения вычислены заранее)
+  const rows = filteredCitizens.map((c) => ({
+    id: c.id,
+    fullName: c.personalInfo?.fullName || "",
+    birthDate: c.personalInfo?.birthDate || "",
+    region: c.region || "",
+    snils: c.personalInfo?.snils || "",
+    gender: c.personalInfo?.gender === "М" ? "Муж." : c.personalInfo?.gender === "Ж" ? "Жен." : "",
+  }));
+
   // Колонки
   const columns = [
     { field: "fullName", headerName: "ФИО", flex: 1, sortable: true },
-    {
-      field: "birthDate",
-      headerName: "Дата рождения",
-      width: 150,
-      sortable: true,
-    },
+    { field: "birthDate", headerName: "Дата рождения", width: 150, sortable: true },
     { field: "region", headerName: "Регион", width: 180, sortable: true },
     { field: "snils", headerName: "СНИЛС", width: 180 },
     { field: "gender", headerName: "Пол", width: 120 },
@@ -49,20 +61,10 @@ function Catalog({ citizens }) {
         Картотека
       </Typography>
       <Typography variant="body2" gutterBottom>
-        Всего записей: {filteredCitizens.length} (демо: {citizens.length},
-        реальность: 100k+)
+        Всего записей: {filteredCitizens.length} (демо: {citizens.length})
       </Typography>
 
-      {/* Панель фильтров */}
-      <Paper
-        sx={{
-          display: "flex",
-          gap: 2,
-          flexWrap: "wrap",
-          p: 2,
-          mb: 2,
-        }}
-      >
+      <Paper sx={{ display: "flex", gap: 2, flexWrap: "wrap", p: 2, mb: 2 }}>
         <TextField
           label="Поиск по ФИО"
           variant="outlined"
@@ -93,24 +95,16 @@ function Catalog({ citizens }) {
         >
           <MenuItem value="">Все</MenuItem>
           {uniqueGenders.map((g) => (
-            <MenuItem key={g} value={g}>
-              {g === "М" ? "Муж." : "Жен."}
+            <MenuItem key={g.value} value={g.value}>
+              {g.label}
             </MenuItem>
           ))}
         </TextField>
       </Paper>
 
-      {/* Таблица */}
-      <div style={{ height: 700, width: 900 }}>
+      <div style={{ height: 700, width: 920 }}>
         <DataGrid
-          rows={filteredCitizens.map((c) => ({
-            id: c.id,
-            fullName: c.fullName,
-            birthDate: c.birthDate,
-            region: c.region,
-            snils: c.snils,
-            gender: c.gender === "М" ? "Муж." : "Жен.",
-          }))}
+          rows={rows}
           columns={columns}
           pageSize={pageSize}
           onPageSizeChange={(newSize) => setPageSize(newSize)}
@@ -118,7 +112,9 @@ function Catalog({ citizens }) {
           pagination
           paginationMode="client"
           disableSelectionOnClick
-          onRowClick={(params) => navigate(`/catalog/${params.id}`)}
+          onRowClick={(params) => {
+            if (params.row?.id) navigate(`/catalog/${params.row.id}`);
+          }}
           rowBuffer={20}
           density="compact"
         />

@@ -1,14 +1,14 @@
+// src/components/dashboard-tabs/EmploymentTab.jsx
 import { Grid, Card, CardContent, Typography } from "@mui/material";
 import { Doughnut, Bubble } from "react-chartjs-2";
 import "./_chartSetup";
 
 export default function EmploymentTab({ citizens }) {
-  // 👇 заменяешь старый подсчёт на этот
+  
 const employmentCounts = citizens.reduce((acc, c) => {
   let category;
-
   if (c.employment === "Работает") {
-    if (c.profession?.toLowerCase().includes("программист")) {
+    if (c.profession?.toLowerCase().includes("программист") || c.profession?.toLowerCase().includes("разработчик")) {
       category = "IT-специалисты";
     } else if (c.profession?.toLowerCase().includes("врач")) {
       category = "Медики";
@@ -26,22 +26,20 @@ const employmentCounts = citizens.reduce((acc, c) => {
   } else {
     category = "Иное";
   }
-
   acc[category] = (acc[category] || 0) + 1;
   return acc;
 }, {});
 
-
   const professionCounts = citizens.reduce((acc, c) => {
-    if (c.profession) {
-      acc[c.profession] = (acc[c.profession] || 0) + 1;
+    const profession = c.profession;
+    if (profession) {
+      acc[profession] = (acc[profession] || 0) + 1;
     }
     return acc;
   }, {});
 
   // данные для занятости
   const total = Object.values(employmentCounts).reduce((a, b) => a + b, 0);
-
   const doughnutData = {
     labels: Object.keys(employmentCounts),
     datasets: [
@@ -76,15 +74,15 @@ const employmentCounts = citizens.reduce((acc, c) => {
       },
     },
     cutout: "60%", // пончик, а не просто pie
+    responsive: true,
+    maintainAspectRatio: false,
   };
 
   // топ профессий
   const professionsTop = Object.entries(professionCounts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10);
-
   const maxCount = professionsTop[0]?.[1] || 1;
-
   const bubbleData = {
     datasets: professionsTop.map(([label, count], i) => ({
       label,
@@ -101,11 +99,16 @@ const employmentCounts = citizens.reduce((acc, c) => {
     })),
   };
 
+  const bubbleOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+  };
+
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} md={6}>
         <Card sx={{ minHeight: 400 }}>
-          <CardContent>
+          <CardContent sx={{ height: 350 }}>
             <Typography variant="h6" gutterBottom>
               Статус занятости
             </Typography>
@@ -115,11 +118,11 @@ const employmentCounts = citizens.reduce((acc, c) => {
       </Grid>
       <Grid item xs={12} md={6}>
         <Card sx={{ minHeight: 400 }}>
-          <CardContent>
+          <CardContent sx={{ height: 350 }}>
             <Typography variant="h6" gutterBottom>
               Топ профессий (bubble — относительная популярность)
             </Typography>
-            <Bubble data={bubbleData} />
+            <Bubble data={bubbleData} options={bubbleOptions} />
           </CardContent>
         </Card>
       </Grid>

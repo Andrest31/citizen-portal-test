@@ -3,7 +3,7 @@ import { Bar } from "react-chartjs-2";
 import "./_chartSetup";
 
 export default function AgeTab({ citizens }) {
-  // бины по возрастам: 0-4,5-9,...,85+
+  // бины по возрастам: 0-4, 5-9, ..., 90+
   const bins = Array.from({ length: 19 }, (_, i) => {
     if (i === 18) return "90+";
     const from = i * 5;
@@ -13,9 +13,11 @@ export default function AgeTab({ citizens }) {
 
   const counts = new Array(bins.length).fill(0);
   citizens.forEach((c) => {
-    const age = c.age;
-    const idx = age >= 90 ? 18 : Math.floor(age / 5);
-    counts[idx] += 1;
+    const age = c.personalInfo?.age;
+    if (typeof age === "number" && age >= 0) {
+      const idx = age >= 90 ? 18 : Math.floor(age / 5);
+      counts[idx] += 1;
+    }
   });
 
   const data = {
@@ -24,7 +26,6 @@ export default function AgeTab({ citizens }) {
       {
         label: "Численность",
         data: counts,
-        // динамические цвета
         backgroundColor: counts.map(
           (v, i) =>
             `rgba(${50 + i * 8}, ${120 + (i % 3) * 30}, ${180 - i * 4}, 0.85)`
@@ -39,13 +40,15 @@ export default function AgeTab({ citizens }) {
       x: { stacked: false },
       y: { ticks: { callback: (v) => Number(v).toLocaleString() } },
     },
+    responsive: true,
+    maintainAspectRatio: false,
   };
 
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
         <Card sx={{ minHeight: 320, minWidth: 800 }}>
-          <CardContent>
+          <CardContent sx={{ height: 300 }}>
             <Typography variant="h6" gutterBottom>
               Возрастная структура
             </Typography>
