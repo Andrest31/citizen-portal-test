@@ -24,7 +24,7 @@ import {
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 
-const drawerWidth = 260;
+const drawerWidth = 220;
 
 const OVERRIDES_KEY = "citizen_overrides_v1";
 
