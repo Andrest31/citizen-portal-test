@@ -173,19 +173,12 @@ export default function Catalog({ citizens }) {
   const columns = [
     { field: "fullName", headerName: "ФИО", flex: 1 },
     { field: "birthDate", headerName: "Дата рожд.", width: 110 },
-    { field: "age", headerName: "Возраст", width: 80 },
+    { field: "age", headerName: "Возраст", width: 50 },
     { field: "region", headerName: "Регион", width: 140 },
     { field: "snils", headerName: "СНИЛС", width: 140 },
-    { field: "gender", headerName: "Пол", width: 80 },
-    { field: "educationLevel", headerName: "Образование", width: 140 },
-    { field: "profession", headerName: "Профессия", width: 150 },
-    {
-      field: "income",
-      headerName: "Доход",
-      width: 120,
-      valueFormatter: ({ value }) =>
-        value != null ? Number(value).toLocaleString() : "—",
-    },
+    { field: "gender", headerName: "Пол", width: 60 },
+    { field: "educationLevel", headerName: "Образование", width: 130 },
+    { field: "profession", headerName: "Профессия", width: 120 },
     {
       field: "hasVehicle",
       headerName: "ТС",
