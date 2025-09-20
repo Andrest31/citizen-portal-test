@@ -17,7 +17,7 @@ const employmentCounts = citizens.reduce((acc, c) => {
     } else {
       category = "Прочие работающие";
     }
-  } else if (c.employment === "Не работает") {
+  } else if (c.employment === "Безработный") {
     category = "Безработные";
   } else if (c.employment === "Студент") {
     category = "Студенты";

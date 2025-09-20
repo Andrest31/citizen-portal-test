@@ -4,186 +4,325 @@ function randomItem(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+// ФИО
+const LASTNAMES_M = [
+  "Иванов",
+  "Петров",
+  "Сидоров",
+  "Кузнецов",
+  "Смирнов",
+  "Фёдоров",
+  "Соловьёв",
+  "Морозов",
+  "Волков",
+  "Егоров",
+];
+const LASTNAMES_F = [
+  "Иванова",
+  "Петрова",
+  "Сидорова",
+  "Кузнецова",
+  "Смирнова",
+  "Фёдорова",
+  "Соловьёва",
+  "Морозова",
+  "Волкова",
+  "Егорова",
+];
+const FIRSTNAMES_M = [
+  "Алексей",
+  "Иван",
+  "Павел",
+  "Сергей",
+  "Андрей",
+  "Дмитрий",
+  "Николай",
+  "Владимир",
+  "Олег",
+  "Егор",
+];
+const FIRSTNAMES_F = [
+  "Анна",
+  "Мария",
+  "Елена",
+  "Ольга",
+  "Татьяна",
+  "Наталья",
+  "Ирина",
+  "Светлана",
+  "Виктория",
+  "Полина",
+];
+const PATRONYMICS_M = [
+  "Иванович",
+  "Петрович",
+  "Сергеевич",
+  "Александрович",
+  "Андреевич",
+  "Николаевич",
+];
+const PATRONYMICS_F = [
+  "Ивановна",
+  "Петровна",
+  "Сергеевна",
+  "Александровна",
+  "Андреевна",
+  "Николаевна",
+];
+
+// Адреса
+const STREETS = [
+  "Ленина",
+  "Советская",
+  "Молодёжная",
+  "Школьная",
+  "Центральная",
+  "Победы",
+  "Гагарина",
+  "Кирова",
+];
+const CITIES = [
+  "Москва",
+  "Санкт-Петербург",
+  "Казань",
+  "Екатеринбург",
+  "Новосибирск",
+  "Ростов-на-Дону",
+  "Краснодар",
+  "Воронеж",
+];
+
+// ВУЗы и специальности
+const UNIVERSITIES = [
+  "МГУ им. Ломоносова",
+  "СПбГУ",
+  "Казанский федеральный университет",
+  "УрФУ",
+  "МФТИ",
+  "НИУ ВШЭ",
+];
+const SPECIALTIES = [
+  "Программная инженерия",
+  "Юриспруденция",
+  "Экономика",
+  "Медицина",
+  "Педагогика",
+  "Строительство",
+];
+
+// Компании и должности
+const COMPANIES = [
+  "Яндекс",
+  "Сбер",
+  "Газпром",
+  "РЖД",
+  "Лукойл",
+  "МТС",
+  "Ростелеком",
+  "Татнефть",
+];
+const POSITIONS = [
+  "Инженер",
+  "Разработчик",
+  "Юрист",
+  "Менеджер",
+  "Учитель",
+  "Врач",
+  "Экономист",
+  "Аналитик",
+];
+
+// Генерация даты
 function randomDate(startYear, endYear) {
   const start = new Date(startYear, 0, 1);
   const end = new Date(endYear, 11, 31);
-  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()))
+  return new Date(
+    start.getTime() + Math.random() * (end.getTime() - start.getTime())
+  )
     .toISOString()
     .slice(0, 10);
 }
 
+// СНИЛС
 function generateSnils() {
   const num = () => String(Math.floor(100 + Math.random() * 900));
-  return `${num()}-${num()}-${num()} ${Math.floor(10 + Math.random() * 90)}`;
+  const part1 = num();
+  const part2 = num();
+  const part3 = num();
+  const check = String(Math.floor(10 + Math.random() * 90));
+  return `${part1}-${part2}-${part3} ${check}`;
 }
 
+// Фото
 function photo(gender) {
   return gender === "М"
     ? `https://randomuser.me/api/portraits/men/${Math.floor(Math.random() * 90)}.jpg`
     : `https://randomuser.me/api/portraits/women/${Math.floor(Math.random() * 90)}.jpg`;
 }
 
-// --- Основной генератор ---
+// Создание одного гражданина
 export function createCitizen(id) {
   const gender = Math.random() > 0.5 ? "М" : "Ж";
-  const firstNamesM = ["Алексей", "Иван", "Павел", "Сергей"];
-  const firstNamesF = ["Анна", "Мария", "Елена", "Ольга"];
-  const lastNamesM = ["Иванов", "Петров", "Сидоров"];
-  const lastNamesF = ["Иванова", "Петрова", "Сидорова"];
-  const patronymicsM = ["Иванович", "Петрович"];
-  const patronymicsF = ["Ивановна", "Петровна"];
-
-  const first = gender === "М" ? randomItem(firstNamesM) : randomItem(firstNamesF);
-  const last = gender === "М" ? randomItem(lastNamesM) : randomItem(lastNamesF);
-  const patronymic = gender === "М" ? randomItem(patronymicsM) : randomItem(patronymicsF);
+  const last =
+    gender === "М" ? randomItem(LASTNAMES_M) : randomItem(LASTNAMES_F);
+  const first =
+    gender === "М" ? randomItem(FIRSTNAMES_M) : randomItem(FIRSTNAMES_F);
+  const patronymic =
+    gender === "М" ? randomItem(PATRONYMICS_M) : randomItem(PATRONYMICS_F);
   const fullName = `${last} ${first} ${patronymic}`;
 
   const birthDate = randomDate(1960, 2005);
   const age = new Date().getFullYear() - new Date(birthDate).getFullYear();
 
-  // --- Основные поля ---
-  const citizen = {
+  // базовые контакты
+  const email = `${first.toLowerCase()}.${last.toLowerCase()}@mail.ru`;
+  const phone = `+7 9${Math.floor(100000000 + Math.random() * 899999999)}`;
+  const city = randomItem(CITIES);
+  const regAddress = `${city}, ул. ${randomItem(STREETS)}, д. ${Math.ceil(Math.random() * 50)}, кв. ${Math.ceil(Math.random() * 150)}`;
+
+  // образование
+  const education = [
+    {
+      institution: randomItem(UNIVERSITIES),
+      specialty: randomItem(SPECIALTIES),
+      graduationYear: 2000 + Math.floor(Math.random() * 20),
+      diplomaNum: `D-${10000 + Math.floor(Math.random() * 90000)}`,
+    },
+  ];
+
+  const documents = [
+    {
+      type: "Паспорт",
+      number: `45${100000 + Math.floor(Math.random() * 900000)}`,
+      issued: randomDate(2000, 2020),
+    },
+    {
+      type: "ИНН",
+      number: `${Math.floor(1000000000 + Math.random() * 9000000000)}`,
+    },
+  ];
+
+  const realEstate = [
+    {
+      type: "Квартира",
+      address: `${city}, ул. ${randomItem(STREETS)}, д. ${Math.ceil(Math.random() * 50)}`,
+    },
+  ];
+
+  const vehicles =
+    Math.random() > 0.7
+      ? [
+          {
+            type: "Легковой",
+            brand: "Toyota",
+            regNum: `А${Math.floor(100 + Math.random() * 900)}ВС77`,
+          },
+        ]
+      : [];
+
+  // работа
+  const work = {
+    currentJob: randomItem(COMPANIES),
+    position: randomItem(POSITIONS),
+    startDate: randomDate(2005, 2022),
+  };
+
+  // семья: учитываем пол для правильной генерации родственных связей
+  const family = [];
+  if (gender === "М") {
+    family.push({
+      fullName: `${randomItem(LASTNAMES_F)} ${randomItem(FIRSTNAMES_F)} ${randomItem(PATRONYMICS_F)}`,
+      relation: "Жена",
+      birthDate: randomDate(1965, 2002),
+      snils: generateSnils(),
+    });
+    family.push({
+      fullName: `${randomItem(LASTNAMES_M)} ${randomItem(FIRSTNAMES_M)} ${randomItem(PATRONYMICS_M)}`,
+      relation: "Сын",
+      birthDate: randomDate(2000, 2015),
+      snils: generateSnils(),
+    });
+  } else {
+    family.push({
+      fullName: `${randomItem(LASTNAMES_M)} ${randomItem(FIRSTNAMES_M)} ${randomItem(PATRONYMICS_M)}`,
+      relation: "Муж",
+      birthDate: randomDate(1965, 2002),
+      snils: generateSnils(),
+    });
+    family.push({
+      fullName: `${randomItem(LASTNAMES_F)} ${randomItem(FIRSTNAMES_F)} ${randomItem(PATRONYMICS_F)}`,
+      relation: "Дочь",
+      birthDate: randomDate(2000, 2015),
+      snils: generateSnils(),
+    });
+  }
+
+  // льготы
+  const benefits = [];
+  if (Math.random() < 0.2) benefits.push("инвалид");
+  if (Math.random() < 0.15) benefits.push("многодетный");
+  if (Math.random() < 0.1) benefits.push("ветеран");
+
+  // --- ДОБАВЛЯЕМ ПОЛЯ ДЛЯ ДАШБОРДОВ ---
+  const maritalStatuses = [
+    "Женат/Замужем",
+    "Холост/Не замужем",
+    "Разведён/Разведена",
+  ];
+  const maritalStatus = randomItem(maritalStatuses);
+
+  // уровень образования
+  let educationLevel = "Среднее общее";
+  if (
+    education[0].specialty === "Программная инженерия" ||
+    education[0].specialty === "Юриспруденция" ||
+    education[0].specialty === "Экономика" ||
+    education[0].specialty === "Медицина"
+  ) {
+    educationLevel = "Высшее";
+  } else if (
+    education[0].specialty === "Педагогика" ||
+    education[0].specialty === "Строительство"
+  ) {
+    educationLevel = "Среднее специальное";
+  }
+
+  // статус занятости
+  let employment = "Работает";
+  if (age > 65) employment = "Пенсионер";
+  if (Math.random() < 0.1) employment = "Безработный";
+  if (Math.random() < 0.08 && age < 25) employment = "Студент";
+
+  const profession = work.position;
+
+  return {
     id: `CIT-${String(id).padStart(5, "0")}`,
     fullName,
     gender,
     birthDate,
-    age,
+    age, // 👈 добавлено
+    email,
+    phone,
+    documents,
+    realEstate,
+    vehicles,
+    regAddress,
     snils: generateSnils(),
-    inn: `77${Math.floor(100000000 + Math.random() * 899999999)}`,
-    passport: {
-      series: `${Math.floor(1000 + Math.random() * 9000)}`,
-      number: `${Math.floor(100000 + Math.random() * 900000)}`,
-      issuedBy: "ОВД Москвы",
-      issuedDate: randomDate(2000, 2020),
-    },
-    nationality: "Русский",
-    citizenship: "Россия",
     photo: photo(gender),
-    maritalStatus: randomItem(["Женат/Замужем", "Холост/Не замужем", "Разведён/Разведена"]),
-
-    // --- Контакты и адреса ---
-    email: `${first.toLowerCase()}.${last.toLowerCase()}@mail.ru`,
-    phone: `+7 9${Math.floor(100000000 + Math.random() * 899999999)}`,
-    mobilePhone: `+7 9${Math.floor(100000000 + Math.random() * 899999999)}`,
-    regAddress: `г. Москва, ул. Ленина, д. ${Math.ceil(Math.random() * 50)}`,
-    factAddress: `г. Москва, ул. Кирова, д. ${Math.ceil(Math.random() * 50)}`,
-    workAddress: "г. Москва, ул. Советская, 10",
-    postalCode: "101000",
-    region: "Москва",
-    country: "Россия",
-    emergencyContactName: "Иван Иванов",
-    emergencyContactPhone: "+7 999 123-45-67",
-
-    // --- Связанные сущности ---
-    education: [
-      {
-        institution: "МГУ",
-        specialty: "Программная инженерия",
-        graduationYear: 2010,
-        diplomaNum: "D-12345",
-        educationLevel: "Высшее",
-        studyType: "Очное",
-      },
+    region: city,
+    education,
+    work,
+    family,
+    benefits,
+    maritalStatus, // 👈 добавлено
+    educationLevel, // 👈 добавлено
+    employment, // 👈 добавлено
+    profession, // 👈 добавлено
+    cases: [
+      { topic: "Экология", date: "2025-01-01" },
+      { topic: "Льготы", date: "2025-02-01" },
     ],
-    work: [
-      {
-        company: "Яндекс",
-        position: "Разработчик",
-        startDate: "2015-01-01",
-        endDate: null,
-        contractType: "Бессрочный",
-        salary: 150000,
-        department: "IT",
-        supervisor: "Петров П.П.",
-      },
-    ],
-    family: [
-      {
-        fullName: "Иванова Анна Петровна",
-        relation: "Жена",
-        birthDate: "1985-03-15",
-        gender: "Ж",
-        snils: generateSnils(),
-        phone: "+7 999 111-22-33",
-        isDependent: false,
-      },
-    ],
-    realEstate: [
-      {
-        type: "Квартира",
-        address: "Москва, ул. Ленина, д. 1",
-        area: 56,
-        ownershipType: "Собственность",
-        cadastralNumber: "77:01:000401:1234",
-        acquisitionDate: "2018-06-10",
-      },
-    ],
-    cars: [
-      {
-        brand: "Toyota",
-        model: "Camry",
-        year: 2020,
-        vin: "XW8ZZZ61ZHG123456",
-        plateNumber: "А123ВС77",
-        ownershipType: "Собственность",
-      },
-    ],
-    credits: [
-      {
-        bankName: "Сбер",
-        accountNumber: "40817810000001234567",
-        creditType: "Ипотека",
-        creditAmount: 3500000,
-        creditBalance: 2500000,
-        startDate: "2019-01-01",
-        endDate: "2039-01-01",
-      },
-    ],
-    medical: {
-      bloodType: "A+",
-      chronicDiseases: ["Гипертония"],
-      disabilities: [],
-      allergies: ["Пыльца"],
-      insuranceNumber: "ОМС-123456",
-      hospitalAttached: "Городская поликлиника №5",
-    },
-    taxes: {
-      taxId: `77${Math.floor(100000000 + Math.random() * 899999999)}`,
-      taxRegion: "77",
-      propertyTaxPaid: true,
-      transportTaxPaid: false,
-      insurancePolicies: [
-        { type: "ОСАГО", number: "111222333", validUntil: "2025-01-01" },
-      ],
-    },
-    legalCases: [
-      {
-        caseId: "CASE-123",
-        type: "Административное",
-        courtName: "Московский суд",
-        dateStart: "2020-01-01",
-        dateEnd: "2020-06-01",
-        result: "Закрыто",
-      },
-    ],
-    military: {
-      status: "Запас",
-      rank: "Сержант",
-      unit: "В/ч 12345",
-      conscriptionYear: 2005,
-      specialty: "Связист",
-    },
-    extra: {
-      hobbies: ["Рыбалка", "Программирование"],
-      socialNetworks: ["vk.com/ivanov"],
-      preferredLanguage: "ru",
-      digitalSignatureId: "DS-98765",
-      biometricData: "hash12345",
-      migrationStatus: "Гражданин РФ",
-    },
   };
-
-  return citizen;
 }
 
 export const mockCitizens = Array.from({ length: 200 }, (_, i) =>

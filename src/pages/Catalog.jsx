@@ -1,11 +1,5 @@
 import { useState, useMemo } from "react";
-import {
-  Box,
-  TextField,
-  MenuItem,
-  Typography,
-  Paper,
-} from "@mui/material";
+import { Box, TextField, MenuItem, Typography, Paper } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
 
@@ -38,7 +32,12 @@ function Catalog({ citizens }) {
   // Колонки
   const columns = [
     { field: "fullName", headerName: "ФИО", flex: 1, sortable: true },
-    { field: "birthDate", headerName: "Дата рождения", width: 150, sortable: true },
+    {
+      field: "birthDate",
+      headerName: "Дата рождения",
+      width: 150,
+      sortable: true,
+    },
     { field: "region", headerName: "Регион", width: 180, sortable: true },
     { field: "snils", headerName: "СНИЛС", width: 180 },
     { field: "gender", headerName: "Пол", width: 120 },
@@ -50,7 +49,8 @@ function Catalog({ citizens }) {
         Картотека
       </Typography>
       <Typography variant="body2" gutterBottom>
-        Всего записей: {filteredCitizens.length} (демо: {citizens.length}, реальность: 100k+)
+        Всего записей: {filteredCitizens.length} (демо: {citizens.length},
+        реальность: 100k+)
       </Typography>
 
       {/* Панель фильтров */}
@@ -119,7 +119,8 @@ function Catalog({ citizens }) {
           paginationMode="client"
           disableSelectionOnClick
           onRowClick={(params) => navigate(`/catalog/${params.id}`)}
-          rowBuffer={5}
+          rowBuffer={20}
+          density="compact"
         />
       </div>
     </Box>

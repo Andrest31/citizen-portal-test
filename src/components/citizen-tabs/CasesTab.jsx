@@ -8,12 +8,8 @@ import {
   TimelineDot,
 } from "@mui/lab";
 
-export default function CasesTab() {
-  const cases = [
-    { topic: "Экология", date: "2025-01-01" },
-    { topic: "Льготы", date: "2025-02-01" },
-    { topic: "Жилье", date: "2025-03-01" },
-  ];
+export default function CasesTab({ citizen }) {
+  const cases = citizen?.cases || [];
 
   return (
     <Box>

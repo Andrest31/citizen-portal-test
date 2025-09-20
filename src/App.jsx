@@ -38,19 +38,21 @@ function App() {
   // стейт загрузки
   const [loading, setLoading] = useState(false);
 
+const worker = new Worker(
+  new URL("./workers/citizenWorker.js", import.meta.url),
+  { type: "module" } 
+);
   // переключение данных
   const toggleDataset = () => {
-    setLoading(true);
+  setLoading(true);
+  const newSize = citizens.length === 200 ? 100000 : 200;
+  worker.postMessage({ size: newSize });
 
-    setTimeout(() => {
-      const newSize = citizens.length === 200 ? 100000 : 200;
-      const newData = Array.from({ length: newSize }, (_, i) =>
-        createCitizen(i + 1)
-      );
-      setCitizens(newData);
-      setLoading(false);
-    }, 50);
+  worker.onmessage = (e) => {
+    setCitizens(e.data);
+    setLoading(false);
   };
+};
 
   return (
     <ThemeProvider theme={theme(mode)}>
