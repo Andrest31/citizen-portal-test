@@ -436,7 +436,7 @@ export function createCitizen(id) {
   let employment = "Работает";
   if (age > 65) employment = "Пенсионер";
   if (Math.random() < 0.05) employment = "Безработный";
-  if (Math.random() < 0.03 && age < 25) employment = "Студент";
+  if (Math.random() < 1.8 && age < 25) employment = "Студент";
   const profession = work.position;
 
   // --- ВОЗВРАЩАЕМЫЙ ОБЪЕКТ ---

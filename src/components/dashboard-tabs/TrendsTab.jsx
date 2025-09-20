@@ -1,80 +1,124 @@
-import { Grid, Card, CardContent, Typography } from "@mui/material";
-import { Line } from "react-chartjs-2";
-import "./_chartSetup";
+import { useMemo } from "react";
+import { Typography, Paper, Grid } from "@mui/material";
+import { LineChart, BarChart } from "@mui/x-charts";
 
-function seriesWithTrend(points = 24, base = 1000, variability = 300, trend = 0.01, skew = 0.5) {
-  // создает серию с трендом и шумом — менее равномерную
-  const out = [];
-  let val = base;
-  for (let i = 0; i < points; i++) {
-    // тренд
-    val = val * (1 + trend * (Math.sin(i / 3) * 0.5 + 1) * 0.5);
-    // шум: смесь нормального и экспоненциального
-    const noise = (Math.random() - 0.4) * variability * (1 + Math.sin(i / 5));
-    const burst = Math.random() < 0.07 ? Math.random() * variability * 3 : 0;
-    out.push(Math.max(0, Math.round(val + noise + burst)));
-  }
-  return out;
-}
+export default function TrendsTab({ citizens = [] }) {
+  // demo dataset: 24 периода (можно заменить на реальные)
+  const dataset = useMemo(() => {
+    const labels = [
+      "окт.24",
+      "ноя.24",
+      "дек.24",
+      "янв.25",
+      "фев.25",
+      "мар.25",
+      "апр.25",
+      "май.25",
+      "июн.25",
+      "июл.25",
+      "авг.25",
+      "сен.25",
+      "окт.25",
+      "ноя.25",
+      "дек.25",
+      "янв.26",
+      "фев.26",
+      "мар.26",
+      "апр.26",
+      "май.26",
+      "июн.26",
+      "июл.26",
+      "авг.26",
+      "сен.26",
+    ];
+    let baseBirth = 5200,
+      baseDeath = 3200,
+      baseMig = 1200;
+    return labels.map((lab, i) => {
+      // produce gentle waves
+      const birth = Math.round(
+        baseBirth + Math.sin(i / 2) * 900 + (Math.random() * 200 - 100)
+      );
+      const death = Math.round(
+        baseDeath + Math.cos(i / 3) * 500 + (Math.random() * 120 - 60)
+      );
+      const mig = Math.round(
+        baseMig + Math.sin(i / 4) * 300 + (Math.random() * 120 - 60)
+      );
+      return {
+        period: lab,
+        birth,
+        death,
+        migration: mig,
+        populationDelta: birth - death + mig,
+      };
+    });
+  }, [citizens]);
 
-export default function TrendsTab() {
-  const labels = Array.from({ length: 24 }, (_, i) => {
-    const month = new Date();
-    month.setMonth(month.getMonth() - (23 - i));
-    return month.toLocaleString("ru", { month: "short", year: "2-digit" });
-  });
-
-  const births = seriesWithTrend(24, 5000, 1200, 0.004);
-  const deaths = seriesWithTrend(24, 3000, 800, -0.001);
-  const migration = seriesWithTrend(24, 1200, 600, 0.002);
-
-  const data = {
-    labels,
-    datasets: [
-      {
-        label: "Рождаемость",
-        data: births,
-        borderColor: "#FF7043",
-        backgroundColor: "rgba(255,112,67,0.08)",
-        tension: 0.35,
-      },
-      {
-        label: "Смертность",
-        data: deaths,
-        borderColor: "#42A5F5",
-        backgroundColor: "rgba(66,165,245,0.08)",
-        tension: 0.35,
-      },
-      {
-        label: "Миграция (чистая)",
-        data: migration,
-        borderColor: "#66BB6A",
-        backgroundColor: "rgba(102,187,106,0.08)",
-        tension: 0.35,
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    plugins: { legend: { position: "top" } },
-    scales: {
-      y: { ticks: { callback: (v) => Number(v).toLocaleString() } },
-    },
-  };
+  const totalDelta = dataset.reduce((s, d) => s + d.populationDelta, 0);
+  const avgBirth = Math.round(
+    dataset.reduce((s, d) => s + d.birth, 0) / (dataset.length || 1)
+  );
+  const avgDeath = Math.round(
+    dataset.reduce((s, d) => s + d.death, 0) / (dataset.length || 1)
+  );
 
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Card sx={{ minHeight: 400, minWidth: 800 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Тренды населения (последние 24 периода)
+    <>
+      <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, textAlign: "center" }}>
+            <Typography variant="subtitle2">
+              Суммарный прирост (показ.)
             </Typography>
-            <Line data={data} options={options} />
-          </CardContent>
-        </Card>
+            <Typography variant="h5">{totalDelta.toLocaleString()}</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, textAlign: "center" }}>
+            <Typography variant="subtitle2">Средняя рождаемость</Typography>
+            <Typography variant="h5">{avgBirth}</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, textAlign: "center" }}>
+            <Typography variant="subtitle2">Средняя смертность</Typography>
+            <Typography variant="h5">{avgDeath}</Typography>
+          </Paper>
+        </Grid>
       </Grid>
-    </Grid>
+
+      <Paper sx={{ p: 2, mb: 2, width: 900 }}>
+        <Typography variant="h6">
+          Тренды населения (рождаемость / смертность / миграция)
+        </Typography>
+        <LineChart
+          dataset={dataset}
+          xAxis={[{ dataKey: "period", scaleType: "point" }]}
+          series={[
+            { dataKey: "birth", label: "Рождаемость", color: "#ff7043" },
+            { dataKey: "death", label: "Смертность", color: "#42a5f5" },
+            {
+              dataKey: "migration",
+              label: "Миграция (чистая)",
+              color: "#66bb6a",
+            },
+          ]}
+          height={340}
+        />
+      </Paper>
+
+      <Paper sx={{ p: 2, width: 900 }}>
+        <Typography variant="h6">
+          Прирост населения по периодам (столбцы)
+        </Typography>
+        <BarChart
+          dataset={dataset}
+          xAxis={[{ dataKey: "period", scaleType: "band" }]}
+          series={[{ dataKey: "populationDelta", color: "#7e57c2" }]}
+          height={280}
+        />
+      </Paper>
+    </>
   );
 }

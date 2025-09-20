@@ -1,7 +1,8 @@
 import { useMemo } from "react";
-import { Typography, Grid, Paper } from "@mui/material";
-import { BarChart, PieChart, LineChart } from "@mui/x-charts";
+import { Typography, Grid, Paper, Box } from "@mui/material";
+import { BarChart, PieChart } from "@mui/x-charts";
 
+/* helper */
 function calcAgeFromBirth(birthDate) {
   if (!birthDate) return null;
   const by = new Date(birthDate);
@@ -14,94 +15,127 @@ function calcAgeFromBirth(birthDate) {
 }
 
 export default function DemographyTab({ citizens }) {
-  const ageDistribution = useMemo(() => {
-    const map = {};
-    for (const c of citizens) {
-      const age = c.personalInfo?.age ?? calcAgeFromBirth(c.personalInfo?.birthDate);
-      if (typeof age !== "number") continue;
-      const bucket = Math.floor(age / 10) * 10;
-      map[bucket] = (map[bucket] || 0) + 1;
-    }
-    return Object.entries(map).map(([bucket, count]) => ({
-      ageGroup: `${bucket}-${+bucket + 9}`,
-      count,
-    }));
-  }, [citizens]);
+  const ages = useMemo(
+    () =>
+      citizens
+        .map((c) => c.personalInfo?.age ?? calcAgeFromBirth(c.personalInfo?.birthDate))
+        .filter((a) => typeof a === "number"),
+    [citizens]
+  );
 
-  const genderSplit = useMemo(() => {
+  const avgAge = ages.length ? Math.round(ages.reduce((a, b) => a + b, 0) / ages.length) : 0;
+
+  const genderCounts = useMemo(() => {
     let male = 0, female = 0;
     for (const c of citizens) {
       if (c.personalInfo?.gender === "М") male++;
       else if (c.personalInfo?.gender === "Ж") female++;
     }
     return [
-      { name: "Мужчины", value: male },
-      { name: "Женщины", value: female },
+      { id: 0, value: male, label: "Мужчины", color: "#4f83cc" },
+      { id: 1, value: female, label: "Женщины", color: "#e57373" },
     ];
   }, [citizens]);
 
-  const avgAgeTrend = useMemo(() => {
-    const byYear = {};
-    for (const c of citizens) {
-      const year = new Date(c.personalInfo?.birthDate).getFullYear();
-      if (!year) continue;
-      const age = c.personalInfo?.age ?? calcAgeFromBirth(c.personalInfo?.birthDate);
-      if (!byYear[year]) byYear[year] = { total: 0, count: 0 };
-      byYear[year].total += age || 0;
-      byYear[year].count += 1;
+  const ageBuckets = useMemo(() => {
+    const map = {};
+    for (const a of ages) {
+      const bucket = Math.floor(a / 10) * 10;
+      map[bucket] = (map[bucket] || 0) + 1;
     }
-    return Object.entries(byYear)
-      .sort(([a], [b]) => a - b)
-      .map(([year, { total, count }]) => ({
-        year,
-        avgAge: (total / count).toFixed(1),
-      }));
+    return Object.entries(map)
+      .sort((a, b) => Number(a[0]) - Number(b[0]))
+      .map(([bucket, count]) => ({ ageGroup: `${bucket}-${+bucket + 9}`, count }));
+  }, [ages]);
+
+  const ageGenderStack = useMemo(() => {
+    const map = {};
+    for (const c of citizens) {
+      const age = c.personalInfo?.age ?? calcAgeFromBirth(c.personalInfo?.birthDate);
+      if (typeof age !== "number") continue;
+      const bucket = Math.floor(age / 10) * 10;
+      if (!map[bucket]) map[bucket] = { bucket: `${bucket}-${bucket + 9}`, male: 0, female: 0, other: 0 };
+      const g = c.personalInfo?.gender;
+      if (g === "М") map[bucket].male++;
+      else if (g === "Ж") map[bucket].female++;
+      else map[bucket].other++;
+    }
+    return Object.values(map).sort((a, b) => {
+      const av = Number(a.bucket.split("-")[0]);
+      const bv = Number(b.bucket.split("-")[0]);
+      return av - bv;
+    });
   }, [citizens]);
 
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12} md={6}>
-        <Paper sx={{ p: 2 }}>
-          <Typography variant="h6">Возрастные группы</Typography>
-          <BarChart
-            dataset={ageDistribution}
-            xAxis={[{ dataKey: "ageGroup", label: "Группа" }]}
-            series={[{ dataKey: "count", label: "Кол-во", color: "#42a5f5" }]}
-            height={300}
-          />
-        </Paper>
+    <Box>
+      {/* KPI */}
+      <Grid container spacing={2} sx={{ mb: 2 }}>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, textAlign: "center" }}>
+            <Typography variant="subtitle2">Средний возраст</Typography>
+            <Typography variant="h4">{avgAge}</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, textAlign: "center" }}>
+            <Typography variant="subtitle2">Всего граждан</Typography>
+            <Typography variant="h4">{citizens.length.toLocaleString()}</Typography>
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, textAlign: "center" }}>
+            <Typography variant="subtitle2">Соотношение (М/Ж)</Typography>
+            <Typography variant="h5">
+              {genderCounts[1].value}/{genderCounts[0].value}
+            </Typography>
+          </Paper>
+        </Grid>
       </Grid>
 
-      <Grid item xs={12} md={6}>
-        <Paper sx={{ p: 2 }}>
-          <Typography variant="h6">Пол</Typography>
-          <PieChart
-            series={[
-              {
-                data: genderSplit.map((d, i) => ({
-                  id: i,
-                  value: d.value,
-                  label: d.name,
-                  color: i === 0 ? "#ef5350" : "#66bb6a",
-                })),
-              },
-            ]}
-            height={300}
-          />
-        </Paper>
-      </Grid>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, height:360 }}>
+            <Typography variant="h6">Возрастные группы</Typography>
+            <BarChart
+              dataset={ageBuckets}
+              xAxis={[{ dataKey: "ageGroup", scaleType: "band" }]}
+              series={[{ dataKey: "count", color: "#4f83cc" }]}
+              height={280}
+            />
+          </Paper>
+        </Grid>
 
-      <Grid item xs={12}>
-        <Paper sx={{ p: 2 }}>
-          <Typography variant="h6">Средний возраст по годам рождения</Typography>
-          <LineChart
-            dataset={avgAgeTrend}
-            xAxis={[{ dataKey: "year", label: "Год рождения" }]}
-            series={[{ dataKey: "avgAge", label: "Средний возраст", color: "#ab47bc" }]}
-            height={300}
-          />
-        </Paper>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, height:360 }}>
+            <Typography variant="h6">Пол</Typography>
+            <PieChart
+              series={[
+                {
+                  innerRadius: 36,
+                  data: genderCounts,
+                },
+              ]}
+              height={280}
+            />
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, height:360 }}>
+            <Typography variant="h6">Возраст × Пол</Typography>
+            <BarChart
+              dataset={ageGenderStack}
+              xAxis={[{ dataKey: "bucket", scaleType: "band" }]}
+              series={[
+                { dataKey: "male", label: "Мужчины", color: "#4f83cc" },
+                { dataKey: "female", label: "Женщины", color: "#e57373" },
+              ]}
+              height={280}
+            />
+          </Paper>
+        </Grid>
       </Grid>
-    </Grid>
+    </Box>
   );
 }
