@@ -17,6 +17,7 @@
     "@mui/lab": "^7.0.0-beta.17",
     "@mui/material": "^7.3.2",
     "@mui/styles": "^6.5.0",
+    "@mui/x-charts": "^8.11.3",
     "@mui/x-data-grid": "^8.11.3",
     "chart.js": "^4.5.0",
     "framer-motion": "^12.23.15",

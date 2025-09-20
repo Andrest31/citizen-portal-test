@@ -1,57 +1,50 @@
-// src/components/dashboard-tabs/RegionsTab.jsx
-import { Grid, Card, CardContent, Typography } from "@mui/material";
-import { Bar } from "react-chartjs-2";
-import "./_chartSetup";
+import { useMemo } from "react";
+import { Typography, Grid, Paper } from "@mui/material";
+import { BarChart } from "@mui/x-charts";
 
 export default function RegionsTab({ citizens }) {
-  const regionCounts = citizens.reduce((acc, c) => {
-    const region = c.region;
-    if (region) {
-      acc[region] = (acc[region] || 0) + 1;
+  const citizensByRegion = useMemo(() => {
+    const map = {};
+    for (const c of citizens) {
+      if (!c.region) continue;
+      map[c.region] = (map[c.region] || 0) + 1;
     }
-    return acc;
-  }, {});
-  
-  const topRegions = Object.entries(regionCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 12);
+    return Object.entries(map).map(([region, count]) => ({ region, count }));
+  }, [citizens]);
 
-  const data = {
-    labels: topRegions.map(([r]) => r),
-    datasets: [
-      {
-        label: "Численность",
-        data: topRegions.map(([, v]) => v),
-        backgroundColor: topRegions.map(([, v], i) => `rgba(${80 + i * 10}, ${140 + (i % 3) * 20}, ${180 - i * 6}, 0.9)`),
-      },
-    ],
-  };
-
-  const options = {
-    indexAxis: "y",
-    plugins: { legend: { display: false } },
-    scales: { 
-      x: { 
-        ticks: { 
-          callback: (v) => Number(v).toLocaleString() 
-        } 
-      } 
-    },
-    responsive: true,
-    maintainAspectRatio: false,
-  };
+  const incomeByRegion = useMemo(() => {
+    const map = {};
+    for (const c of citizens) {
+      if (!c.region) continue;
+      const inc = c.income?.total ?? 0;
+      map[c.region] = (map[c.region] || 0) + inc;
+    }
+    return Object.entries(map).map(([region, total]) => ({ region, total }));
+  }, [citizens]);
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <Card sx={{ minHeight: 400, minWidth: 800 }}>
-          <CardContent sx={{ height: 350 }}>
-            <Typography variant="h6" gutterBottom>
-              ТОП регионов (по населению)
-            </Typography>
-            <Bar data={data} options={options} />
-          </CardContent>
-        </Card>
+      <Grid item xs={12} md={6}>
+        <Paper sx={{ p: 2 }}>
+          <Typography variant="h6">Граждане по регионам</Typography>
+          <BarChart
+            dataset={citizensByRegion}
+            xAxis={[{ dataKey: "region" }]}
+            series={[{ dataKey: "count", color: "#26a69a" }]}
+            height={300}
+          />
+        </Paper>
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <Paper sx={{ p: 2 }}>
+          <Typography variant="h6">Доход по регионам</Typography>
+          <BarChart
+            dataset={incomeByRegion}
+            xAxis={[{ dataKey: "region" }]}
+            series={[{ dataKey: "total", color: "#9ccc65" }]}
+            height={300}
+          />
+        </Paper>
       </Grid>
     </Grid>
   );
