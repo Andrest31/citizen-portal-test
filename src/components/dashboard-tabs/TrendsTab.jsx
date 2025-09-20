@@ -110,7 +110,7 @@ export default function TrendsTab({ citizens = [] }) {
 
       <Paper sx={{ p: 2, width: 900 }}>
         <Typography variant="h6">
-          Прирост населения по периодам (столбцы)
+          Прирост населения по периодам
         </Typography>
         <BarChart
           dataset={dataset}

@@ -1,3 +1,4 @@
+// src/pages/Catalog.js
 import { useState, useMemo, useEffect } from "react";
 import {
   Box,
@@ -5,7 +6,6 @@ import {
   MenuItem,
   Typography,
   Paper,
-  Slider,
   FormControlLabel,
   Checkbox,
   Autocomplete,
@@ -31,21 +31,21 @@ function calcAgeFromBirth(birthDate) {
 export default function Catalog({ citizens }) {
   const navigate = useNavigate();
 
-  // --- состояние фильтров ---
+  // --- состояние фильтров (черновик) ---
   const [searchTerm, setSearchTerm] = useState("");
   const [regionFilter, setRegionFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
-  const [ageRange, setAgeRange] = useState([0, 100]);
   const [educationFilter, setEducationFilter] = useState([]);
   const [professionFilter, setProfessionFilter] = useState("");
   const [benefitsFilter, setBenefitsFilter] = useState([]);
   const [hasVehicle, setHasVehicle] = useState(false);
   const [hasHousing, setHasHousing] = useState(false);
 
-  const [pageSize, setPageSize] = useState(50);
-
-  // --- данные после фильтрации ---
+  // --- применённые фильтры ---
+  const [, setAppliedFilters] = useState({});
   const [filteredCitizens, setFilteredCitizens] = useState(citizens);
+
+  const [pageSize, setPageSize] = useState(50);
   const [loading, setLoading] = useState(false);
 
   // --- инициализация воркера ---
@@ -70,53 +70,23 @@ export default function Catalog({ citizens }) {
     return () => workerRef.removeEventListener("message", onMsg);
   }, [workerRef]);
 
-  // --- диапазон возраста ---
-  useEffect(() => {
-    let min = Infinity,
-      max = -Infinity;
-    for (const c of citizens) {
-      let age = c.personalInfo?.age ?? calcAgeFromBirth(c.personalInfo?.birthDate);
-      if (typeof age === "number") {
-        if (age < min) min = age;
-        if (age > max) max = age;
-      }
-    }
-    if (min === Infinity) min = 0;
-    if (max === -Infinity) max = 100;
-    setAgeRange([min, max]);
-  }, [citizens]);
-
-  // --- отправляем фильтры в воркер ---
-  useEffect(() => {
+  // --- применить фильтры ---
+  const applyFilters = () => {
     if (!workerRef) return;
     setLoading(true);
-    workerRef.postMessage({
-      citizens,
-      filters: {
-        searchTerm,
-        regionFilter,
-        genderFilter,
-        ageRange,
-        educationFilter,
-        professionFilter,
-        benefitsFilter,
-        hasVehicle,
-        hasHousing,
-      },
-    });
-  }, [
-    citizens,
-    searchTerm,
-    regionFilter,
-    genderFilter,
-    ageRange,
-    educationFilter,
-    professionFilter,
-    benefitsFilter,
-    hasVehicle,
-    hasHousing,
-    workerRef,
-  ]);
+    const filters = {
+      searchTerm,
+      regionFilter,
+      genderFilter,
+      educationFilter,
+      professionFilter,
+      benefitsFilter,
+      hasVehicle,
+      hasHousing,
+    };
+    setAppliedFilters(filters);
+    workerRef.postMessage({ citizens, filters });
+  };
 
   // --- списки для фильтров ---
   const uniqueRegions = useMemo(() => {
@@ -173,12 +143,12 @@ export default function Catalog({ citizens }) {
   const columns = [
     { field: "fullName", headerName: "ФИО", flex: 1 },
     { field: "birthDate", headerName: "Дата рожд.", width: 110 },
-    { field: "age", headerName: "Возраст", width: 50 },
+    { field: "age", headerName: "Возраст", width: 60 },
     { field: "region", headerName: "Регион", width: 140 },
     { field: "snils", headerName: "СНИЛС", width: 140 },
-    { field: "gender", headerName: "Пол", width: 60 },
-    { field: "educationLevel", headerName: "Образование", width: 130 },
-    { field: "profession", headerName: "Профессия", width: 120 },
+    { field: "gender", headerName: "Пол", width: 80 },
+    { field: "educationLevel", headerName: "Образование", width: 150 },
+    { field: "profession", headerName: "Профессия", width: 150 },
     {
       field: "hasVehicle",
       headerName: "ТС",
@@ -203,6 +173,8 @@ export default function Catalog({ citizens }) {
     setBenefitsFilter([]);
     setHasVehicle(false);
     setHasHousing(false);
+    setFilteredCitizens(citizens);
+    setAppliedFilters({});
   };
 
   // --- экспорт CSV ---
@@ -342,7 +314,16 @@ export default function Catalog({ citizens }) {
           label="Есть жильё"
         />
         {loading && <CircularProgress size={26} />}
-        <Grid container spacing={1} sx={{ alignItems: "center", ml: "auto" }}>
+        <Grid
+          container
+          spacing={1}
+          sx={{ alignItems: "center", ml: "auto", width: "auto" }}
+        >
+          <Grid item>
+            <Button variant="contained" onClick={applyFilters}>
+              Применить
+            </Button>
+          </Grid>
           <Grid item>
             <Button variant="outlined" onClick={clearFilters}>
               Сбросить
@@ -350,7 +331,7 @@ export default function Catalog({ citizens }) {
           </Grid>
           <Grid item>
             <Button
-              variant="contained"
+              variant="outlined"
               onClick={exportCsv}
               disabled={rows.length === 0}
             >

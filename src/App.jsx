@@ -70,7 +70,7 @@ export default function App() {
     try {
       return new Worker(new URL("./workers/citizenWorker.js", import.meta.url), { type: "module" });
     } catch (e) {
-      console.warn("Worker не создан — возможно сборщик не поддерживает new Worker(URL).", e);
+      console.warn("Worker не создан.", e);
       return null;
     }
   }, []);

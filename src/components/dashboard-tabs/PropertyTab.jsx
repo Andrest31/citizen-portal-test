@@ -46,21 +46,21 @@ export default function PropertyTab({ citizens }) {
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
           <Paper sx={{ p:2, height:360 }}>
-            <Typography variant="h6">Жильё (donut)</Typography>
+            <Typography variant="h6">Жильё</Typography>
             <PieChart series={[{ innerRadius:60, outerRadius:120, data: stats.donutHouse }]} height={280} />
           </Paper>
         </Grid>
 
         <Grid item xs={12} md={6}>
           <Paper sx={{ p:2, height:360 }}>
-            <Typography variant="h6">Транспорт (donut)</Typography>
+            <Typography variant="h6">Транспорт</Typography>
             <PieChart series={[{ innerRadius:60, outerRadius:120, data: stats.donutCar }]} height={280} />
           </Paper>
         </Grid>
 
         <Grid item xs={12}>
           <Paper sx={{ p:2, width: 910 }}>
-            <Typography variant="h6">Наличие жилья и транспорта по регионам (TOP 20)</Typography>
+            <Typography variant="h6">Наличие жилья и транспорта по регионам</Typography>
             <BarChart
               dataset={stats.byRegion}
               xAxis={[{ dataKey: "region", scaleType: "band" }]}
