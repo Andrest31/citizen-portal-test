@@ -1,4 +1,3 @@
-// src/pages/Catalog.js
 import { useState, useMemo, useEffect } from "react";
 import {
   Box,
@@ -12,21 +11,12 @@ import {
   Autocomplete,
   Button,
   Grid,
+  CircularProgress,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useNavigate } from "react-router-dom";
 
-/** Хелпер: дебаунс значения */
-function useDebounced(value, delay = 300) {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(t);
-  }, [value, delay]);
-  return debounced;
-}
-
-/** Преобразование даты в возраст, если age не задан */
+/** Преобразование даты в возраст */
 function calcAgeFromBirth(birthDate) {
   if (!birthDate) return null;
   const by = new Date(birthDate);
@@ -41,36 +31,104 @@ function calcAgeFromBirth(birthDate) {
 export default function Catalog({ citizens }) {
   const navigate = useNavigate();
 
-  // UI state фильтров
+  // --- состояние фильтров ---
   const [searchTerm, setSearchTerm] = useState("");
-  const searchDebounced = useDebounced(searchTerm, 300);
-
   const [regionFilter, setRegionFilter] = useState("");
   const [genderFilter, setGenderFilter] = useState("");
-  const [ageRange, setAgeRange] = useState([0, 100]); // min/max
-  const [educationFilter, setEducationFilter] = useState([]); // массив
+  const [ageRange, setAgeRange] = useState([0, 100]);
+  const [educationFilter, setEducationFilter] = useState([]);
   const [professionFilter, setProfessionFilter] = useState("");
-  const professionDebounced = useDebounced(professionFilter, 300);
-  const [benefitsFilter, setBenefitsFilter] = useState([]); // массив
+  const [benefitsFilter, setBenefitsFilter] = useState([]);
   const [hasVehicle, setHasVehicle] = useState(false);
   const [hasHousing, setHasHousing] = useState(false);
 
   const [pageSize, setPageSize] = useState(50);
 
-  // Вычисляем уникальные значения для селектов (memoized)
+  // --- данные после фильтрации ---
+  const [filteredCitizens, setFilteredCitizens] = useState(citizens);
+  const [loading, setLoading] = useState(false);
+
+  // --- инициализация воркера ---
+  const workerRef = useMemo(() => {
+    try {
+      return new Worker(new URL("../workers/catalogWorker.js", import.meta.url), {
+        type: "module",
+      });
+    } catch (e) {
+      console.error("Не удалось создать catalogWorker:", e);
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!workerRef) return;
+    const onMsg = (e) => {
+      setFilteredCitizens(e.data);
+      setLoading(false);
+    };
+    workerRef.addEventListener("message", onMsg);
+    return () => workerRef.removeEventListener("message", onMsg);
+  }, [workerRef]);
+
+  // --- диапазон возраста ---
+  useEffect(() => {
+    let min = Infinity,
+      max = -Infinity;
+    for (const c of citizens) {
+      let age = c.personalInfo?.age ?? calcAgeFromBirth(c.personalInfo?.birthDate);
+      if (typeof age === "number") {
+        if (age < min) min = age;
+        if (age > max) max = age;
+      }
+    }
+    if (min === Infinity) min = 0;
+    if (max === -Infinity) max = 100;
+    setAgeRange([min, max]);
+  }, [citizens]);
+
+  // --- отправляем фильтры в воркер ---
+  useEffect(() => {
+    if (!workerRef) return;
+    setLoading(true);
+    workerRef.postMessage({
+      citizens,
+      filters: {
+        searchTerm,
+        regionFilter,
+        genderFilter,
+        ageRange,
+        educationFilter,
+        professionFilter,
+        benefitsFilter,
+        hasVehicle,
+        hasHousing,
+      },
+    });
+  }, [
+    citizens,
+    searchTerm,
+    regionFilter,
+    genderFilter,
+    ageRange,
+    educationFilter,
+    professionFilter,
+    benefitsFilter,
+    hasVehicle,
+    hasHousing,
+    workerRef,
+  ]);
+
+  // --- списки для фильтров ---
   const uniqueRegions = useMemo(() => {
     const s = new Set();
     for (const c of citizens) if (c.region) s.add(c.region);
     return Array.from(s).sort();
   }, [citizens]);
 
-  const uniqueGenders = useMemo(() => {
-    // фиксированный список удобнее
-    return [
-      { value: "М", label: "Муж." },
-      { value: "Ж", label: "Жен." },
-    ];
-  }, []);
+  const uniqueGenders = [
+    { value: "М", label: "Муж." },
+    { value: "Ж", label: "Жен." },
+  ];
 
   const uniqueEducationLevels = useMemo(() => {
     const s = new Set();
@@ -80,121 +138,15 @@ export default function Catalog({ citizens }) {
 
   const uniqueBenefits = useMemo(() => {
     const s = new Set();
-    for (const c of citizens) {
-      (c.benefits || []).forEach((b) => s.add(b));
-    }
+    for (const c of citizens) (c.benefits || []).forEach((b) => s.add(b));
     return Array.from(s).sort();
   }, [citizens]);
 
-  // вычисляем диапазон возраста в данных, чтобы выставить пределы слайдера
-  const [dataAgeMinMax] = useMemo(() => {
-    let min = Infinity,
-      max = -Infinity;
-    for (const c of citizens) {
-      let age = c.personalInfo?.age;
-      if (!age) age = calcAgeFromBirth(c.personalInfo?.birthDate);
-      if (typeof age === "number") {
-        if (age < min) min = age;
-        if (age > max) max = age;
-      }
-    }
-    if (min === Infinity) min = 0;
-    if (max === -Infinity) max = 100;
-    return [[Math.max(0, Math.floor(min)), Math.max(0, Math.ceil(max))]];
-  }, [citizens]);
-
-  // Инициализируем ageRange при первой загрузке
-  useEffect(() => {
-    const [minMax] = dataAgeMinMax;
-    if (minMax) setAgeRange([minMax[0], minMax[1]]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataAgeMinMax[0], dataAgeMinMax.length]);
-
-  // Основная фильтрация (оптимизировано useMemo)
-  const filteredCitizens = useMemo(() => {
-    const sTerm = (searchDebounced || "").trim().toLowerCase();
-    const pTerm = (professionDebounced || "").trim().toLowerCase();
-    const rFilter = regionFilter;
-    const gFilter = genderFilter;
-    const [ageMin, ageMax] = ageRange;
-    const eduSet = new Set(educationFilter || []);
-    const benefitsSet = new Set(benefitsFilter || []);
-    const needVehicle = hasVehicle;
-    const needHousing = hasHousing;
-
-    // Если нет граждан — быстро вернуть пустой массив
-    if (!citizens || citizens.length === 0) return [];
-
-    return citizens.filter((c) => {
-      // ФИО поиск
-      const fullName = (c.personalInfo?.fullName || "").toLowerCase();
-      if (sTerm && !fullName.includes(sTerm)) return false;
-
-      // Регион
-      if (rFilter && c.region !== rFilter) return false;
-
-      // Пол
-      if (gFilter && (c.personalInfo?.gender || "") !== gFilter) return false;
-
-      // Возраст
-      let age = c.personalInfo?.age;
-      if (!age) age = calcAgeFromBirth(c.personalInfo?.birthDate);
-      if (typeof age === "number") {
-        if (age < ageMin || age > ageMax) return false;
-      } else {
-        // если нет возраста — исключаем
-        return false;
-      }
-
-      // Образование
-      if (eduSet.size > 0) {
-        if (!c.educationLevel || !eduSet.has(c.educationLevel)) return false;
-      }
-
-      // Профессия (по подстроке)
-      if (pTerm) {
-        const prof = (c.profession || "").toLowerCase();
-        if (!prof.includes(pTerm)) return false;
-      }
-
-      // Льготы
-      if (benefitsSet.size > 0) {
-        const hasAny = (c.benefits || []).some((b) => benefitsSet.has(b));
-        if (!hasAny) return false;
-      }
-
-      // Наличие транспорта
-      if (needVehicle) {
-        if (!Array.isArray(c.vehicles) || c.vehicles.length === 0) return false;
-      }
-
-      // Наличие жилья
-      if (needHousing) {
-        if (!Array.isArray(c.housing) || c.housing.length === 0) return false;
-      }
-
-      return true;
-    });
-  }, [
-    citizens,
-    searchDebounced,
-    regionFilter,
-    genderFilter,
-    ageRange,
-    educationFilter,
-    professionDebounced,
-    benefitsFilter,
-    hasVehicle,
-    hasHousing,
-  ]);
-
-  // Строки для DataGrid — мапим минимально необходимое (с индексом id)
+  // --- строки для DataGrid ---
   const rows = useMemo(() => {
     return filteredCitizens.map((c) => {
       const age =
-        c.personalInfo?.age ??
-        calcAgeFromBirth(c.personalInfo?.birthDate) ??
-        "";
+        c.personalInfo?.age ?? calcAgeFromBirth(c.personalInfo?.birthDate) ?? "";
       return {
         id: c.id,
         fullName: c.personalInfo?.fullName || "",
@@ -206,8 +158,8 @@ export default function Catalog({ citizens }) {
           c.personalInfo?.gender === "М"
             ? "Муж."
             : c.personalInfo?.gender === "Ж"
-              ? "Жен."
-              : "",
+            ? "Жен."
+            : "",
         educationLevel: c.educationLevel || "",
         employment: c.employment || "",
         profession: c.profession || "",
@@ -219,19 +171,21 @@ export default function Catalog({ citizens }) {
   }, [filteredCitizens]);
 
   const columns = [
-    { field: "fullName", headerName: "ФИО", flex: 1, sortable: true },
-    {
-      field: "birthDate",
-      headerName: "Дата рожд.",
-      width: 110,
-      sortable: true,
-    },
-    { field: "age", headerName: "Возраст", width: 50, sortable: true },
-    { field: "region", headerName: "Регион", width: 140, sortable: true },
+    { field: "fullName", headerName: "ФИО", flex: 1 },
+    { field: "birthDate", headerName: "Дата рожд.", width: 110 },
+    { field: "age", headerName: "Возраст", width: 80 },
+    { field: "region", headerName: "Регион", width: 140 },
     { field: "snils", headerName: "СНИЛС", width: 140 },
-    { field: "gender", headerName: "Пол", width: 60 },
-    { field: "educationLevel", headerName: "Образование", width: 130 },
-    { field: "profession", headerName: "Профессия", width: 140 },
+    { field: "gender", headerName: "Пол", width: 80 },
+    { field: "educationLevel", headerName: "Образование", width: 140 },
+    { field: "profession", headerName: "Профессия", width: 150 },
+    {
+      field: "income",
+      headerName: "Доход",
+      width: 120,
+      valueFormatter: ({ value }) =>
+        value != null ? Number(value).toLocaleString() : "—",
+    },
     {
       field: "hasVehicle",
       headerName: "ТС",
@@ -246,13 +200,11 @@ export default function Catalog({ citizens }) {
     },
   ];
 
-  // Очистка фильтров
+  // --- очистка фильтров ---
   const clearFilters = () => {
     setSearchTerm("");
     setRegionFilter("");
     setGenderFilter("");
-    const [minMax] = dataAgeMinMax;
-    setAgeRange([minMax[0], minMax[1]]);
     setEducationFilter([]);
     setProfessionFilter("");
     setBenefitsFilter([]);
@@ -260,7 +212,7 @@ export default function Catalog({ citizens }) {
     setHasHousing(false);
   };
 
-  // Экспорт в CSV (экспортируем текущие видимые строки)
+  // --- экспорт CSV ---
   const exportCsv = () => {
     if (!rows || rows.length === 0) return;
     const header = [
@@ -289,8 +241,8 @@ export default function Catalog({ citizens }) {
         r.profession,
         r.income,
       ];
-      const escaped = vals.map(
-        (v) => `"${String(v ?? "").replace(/"/g, '""')}"`
+      const escaped = vals.map((v) =>
+        `"${String(v ?? "").replace(/"/g, '""')}"`
       );
       lines.push(escaped.join(","));
     }
@@ -308,24 +260,24 @@ export default function Catalog({ citizens }) {
   };
 
   return (
-    <Box sx={{ p: 2, width:1250 }}>
+    <Box sx={{ p: 2, width: 1250 }}>
       <Typography variant="h4" gutterBottom>
         Картотека
       </Typography>
       <Typography variant="body2" gutterBottom>
-        Всего записей: {filteredCitizens.length.toLocaleString()} (всего в базе:{" "}
-        {citizens.length.toLocaleString()})
+        Найдено: {filteredCitizens.length.toLocaleString()} из{" "}
+        {citizens.length.toLocaleString()}
       </Typography>
 
-      <Paper sx={{ display: "flex", gap: 2, flexWrap: "wrap", p: 2, mb: 2 }}>
+      <Paper
+        sx={{ display: "flex", gap: 2, flexWrap: "wrap", p: 2, mb: 2 }}
+      >
         <TextField
           label="Поиск по ФИО"
-          variant="outlined"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           sx={{ flex: "1 1 280px", minWidth: 200 }}
         />
-
         <TextField
           select
           label="Регион"
@@ -340,7 +292,6 @@ export default function Catalog({ citizens }) {
             </MenuItem>
           ))}
         </TextField>
-
         <TextField
           select
           label="Пол"
@@ -355,7 +306,6 @@ export default function Catalog({ citizens }) {
             </MenuItem>
           ))}
         </TextField>
-
         <Autocomplete
           multiple
           options={uniqueEducationLevels}
@@ -363,18 +313,15 @@ export default function Catalog({ citizens }) {
           onChange={(e, v) => setEducationFilter(v)}
           sx={{ width: 240 }}
           renderInput={(params) => (
-            <TextField {...params} label="Уровень образования" />
+            <TextField {...params} label="Образование" />
           )}
         />
-
         <TextField
-          label="Профессия (по подстроке)"
-          variant="outlined"
+          label="Профессия"
           value={professionFilter}
           onChange={(e) => setProfessionFilter(e.target.value)}
           sx={{ width: 220 }}
         />
-
         <Autocomplete
           multiple
           options={uniqueBenefits}
@@ -383,7 +330,6 @@ export default function Catalog({ citizens }) {
           sx={{ width: 240 }}
           renderInput={(params) => <TextField {...params} label="Льготы" />}
         />
-
         <FormControlLabel
           control={
             <Checkbox
@@ -402,15 +348,11 @@ export default function Catalog({ citizens }) {
           }
           label="Есть жильё"
         />
-
-        <Grid
-          container
-          spacing={1}
-          sx={{ alignItems: "center", ml: "auto", width: "auto" }}
-        >
+        {loading && <CircularProgress size={26} />}
+        <Grid container spacing={1} sx={{ alignItems: "center", ml: "auto" }}>
           <Grid item>
             <Button variant="outlined" onClick={clearFilters}>
-              Сбросить фильтры
+              Сбросить
             </Button>
           </Grid>
           <Grid item>
@@ -419,7 +361,7 @@ export default function Catalog({ citizens }) {
               onClick={exportCsv}
               disabled={rows.length === 0}
             >
-              Экспорт CSV ({rows.length})
+              Экспорт ({rows.length})
             </Button>
           </Grid>
         </Grid>
@@ -430,23 +372,14 @@ export default function Catalog({ citizens }) {
           rows={rows}
           columns={columns}
           pageSize={pageSize}
-          onPageSizeChange={(newSize) => setPageSize(newSize)}
+          onPageSizeChange={(s) => setPageSize(s)}
           rowsPerPageOptions={[25, 50, 100]}
           pagination
-          paginationMode="client"
           disableSelectionOnClick
-          onRowClick={(params) => {
-            if (params.row?.id) navigate(`/catalog/${params.row.id}`);
-          }}
-          rowBuffer={50}
+          onRowClick={(params) => navigate(`/catalog/${params.row.id}`)}
+          rowBuffer={20}
           density="compact"
           getRowId={(r) => r.id}
-          sortingOrder={["desc", "asc"]}
-          sx={{
-            "& .MuiDataGrid-row": {
-              cursor: "pointer",
-            },
-          }}
         />
       </div>
     </Box>
